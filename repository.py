@@ -18,3 +18,41 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
+
+class Repository(object):
+  def __init__(self):
+    pass
+
+class Package(object):
+  # states
+
+  DOWNLOADING = 1
+  PROCESSING = 2
+  DONE = 3
+
+  def __init__(self):
+    self.name = None
+    self.size = None
+    # this timestamp relates to when
+    # the source data were last updated
+    self.dataTimestamp = None
+    # path to the data folder
+    self.path = None
+    self.state = None
+
+  def getName(self):
+    return self.name
+
+  def getPath(self):
+    return self.path
+
+  def getState(self):
+    return self.state
+
+  def clear(self):
+    """remove any data in storage created by this package"""
+    pass
+
+
+def main(self):
+  print("starting repository update")

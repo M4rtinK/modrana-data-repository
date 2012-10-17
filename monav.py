@@ -18,3 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
+
+from repository import Package
+
+class MonavPackage(Package):
+  def __init__(self, url):
+    Package.__init__()
