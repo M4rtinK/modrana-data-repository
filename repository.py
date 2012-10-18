@@ -100,6 +100,10 @@ class Package(object):
     # path to the data folder
     self.path = None
     self.state = None
+    # combined time spend on package processing in seconds
+    self.processingTime = 0
+    # current loading progress 0.0 = 0%, 1.0 = 100%
+    self.loadingProgress = 0.0
 
   def getName(self):
     return self.name
