@@ -46,8 +46,8 @@ class MonavRepository(Repository):
       if len(row) > 0:
         try:
           url = row[0]
-          pack = MonavPackage(url, tempPath, id)
-          id+=1
+          pack = MonavPackage(url, tempPath, packId)
+          packId+=1
           sourceQueue.put(pack)
 
         except Exception, e:
