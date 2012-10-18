@@ -21,6 +21,7 @@
 
 import multiprocessing as mp
 import os
+import time
 
 from monav import MonavRepository
 
@@ -127,7 +128,11 @@ def main(self):
   print("## starting repository update ##")
 
   print("## updating Monav repository" )
+  start = time.clock()
   monav = MonavRepository()
   monav.update()
+  dt = int(time.clock - start)
+  print("## Monav repository updated in %d s" % dt)
+
 
 main()
