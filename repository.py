@@ -24,6 +24,7 @@ import os
 import time
 
 from monav import MonavRepository
+import ConfigParser
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()
@@ -38,9 +39,12 @@ SHUTDOWN_KEYWORD = "shutdown"
 # folders
 TEMP_PATH = "temp"
 RESULTS_PATH = "results"
+CONFIG_FILE_PATH = "repository.conf"
 
 class Repository(object):
-  def __init__(self):
+  def __init__(self, args, conf):
+    self.args = args
+    self.conf = conf
     # is fed by the data loader
     self.sourceQueue = mp.Queue(SOURCE_DATA_QUEUE_SIZE)
     # the processing pool consumes from the source queue
@@ -150,6 +154,11 @@ class Package(object):
     pass
 
 def main(self):
+  # load the configuration file
+  conf = ConfigParser.ConfigParser()
+  conf.read(CONFIG_FILE_PATH)
+  args = None # TODO: CLI options handling
+
   print("## starting repository update ##")
 
   print("## updating Monav repository" )
