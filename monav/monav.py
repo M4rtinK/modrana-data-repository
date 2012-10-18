@@ -43,22 +43,10 @@ class MonavRepository(Repository):
       if len(row) > 0:
         try:
           url = row[0]
-          # get the storage path from the URL
-          wholePath = urlparse.urlparse(url)[2]
-          # split to filename & folder path
-          folderPath, filename = os.path.split(wholePath)
-
-          #TODO: continent/country storage handling
-
-          # get the filename without extensions
-          name = filename.split('.')[0]
-          storagePath = os.path.join("%d" % id, name)
+          pack = MonavPackage(url, tempPath, id)
           id+=1
-          os.makedirs(storagePath)
-          request = urllib2.urlopen(url)
-          f = open(os.path.join(storagePath, filename), "w")
-          f.write(request.read())
-          f.close()
+          sourceQueue.put(pack)
+
         except Exception, e:
           print('monav loader: loading url failed: %s' % url)
           print(e)
@@ -82,8 +70,25 @@ class MonavRepository(Repository):
   def _publishPackage(self, publishQueue):
     pass
 
-
-
 class MonavPackage(Package):
-  def __init__(self, url):
+  def __init__(self, url, tempPath, id):
     Package.__init__()
+    self.url = url
+    self.tempPath = tempPath
+    self.id = id
+    # get the storage path from the URL
+    wholePath = urlparse.urlparse(url)[2]
+    # split to filename & folder path
+    self.repoPath, self.filename = os.path.split(wholePath)
+    # get the filename without extensions
+    self.name = self.filename.split('.')[0]
+    self.tempStoragePath = os.path.join(tempPath, "%d" % id, self.name)
+    self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
+  def startLoading(self):
+    """download PBF extract from the URL and store it locally"""
+    os.makedirs(self.tempStoragePath)
+    request = urllib2.urlopen(self.url)
+    f = open(self.sourceDataPath, "w")
+    f.write(request.read())
+    f.close()
+
