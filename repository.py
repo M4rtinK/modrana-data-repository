@@ -21,6 +21,7 @@
 
 import multiprocessing as mp
 import os
+
 from monav import MonavRepository
 
 # pool & queue sizes
@@ -52,12 +53,12 @@ class Repository(object):
 
   def update(self):
     # start the loading process
-    self.loadingProcess = mp.Process(target=self._loadData, args=self.sourceQueue)
+    tempPath = self.getTempPath()
+    self.loadingProcess = mp.Process(target=self._loadData, args=(tempPath, self.sourceQueue))
     # start the processing processes
     self.processingPool.apply_async(func=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
     # start the packaging processes
     self.processingPool.apply_async(func=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
-
     # start the publishing process
     self.publishingProcess = mp.Process(target=self._loadData, args=self.publishQueue)
 
