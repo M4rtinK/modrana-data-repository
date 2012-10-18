@@ -18,10 +18,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
-import urllib
 import urllib2
 
-from repository import Package, Repository
+from repository import Package, Repository, SHUTDOWN_KEYWORD
 import csv
 import urlparse
 import os
@@ -49,23 +48,46 @@ class MonavRepository(Repository):
           pack = MonavPackage(url, tempPath, packId)
           packId+=1
           sourceQueue.put(pack)
-
         except Exception, e:
           print('monav loader: loading url failed: %s' % url)
           print(e)
-
-
-    print('monav loader: finished')
+    print('monav loader: all downloads finished')
 
 
   def _processPackage(self, sourceQueue, packQueue):
-    pass
+    """process OSM data in the PBF format into Monav routing data"""
+    while True:
+      package = sourceQueue.get()
+      if package == SHUTDOWN_KEYWORD:
+        break
+      # process the data
+      package.startProcessing()
+      # forward the package to the packaging pool
+      packQueue.put(package)
+    print('monav processing: shutting down')
 
   def _packagePackage(self, packQueue, publishQueue):
-    pass
+    """create a compressed TAR archive from the Monav routing data
+    -> three packages (car, pedestrian, bike) are generated and compressed
+    sequentially to three separate archives"""
+    while True:
+      package = packQueue.get()
+      if package == SHUTDOWN_KEYWORD:
+        break
+      # packaging
+      package.startPackaging()
+      # forward the package to the publishing process
+      publishQueue.put(package)
+    print('monav packaging: shutting down')
 
   def _publishPackage(self, publishQueue):
-    pass
+    """tak the compressed TARs and publish them to the modRana public folder
+    and update the repository manifest accordingly"""
+    while True:
+      package = publishQueue.get()
+      if package == SHUTDOWN_KEYWORD:
+        break
+    print('monav publisher: shutting down')
 
 class MonavPackage(Package):
   def __init__(self, url, tempPath, id):
