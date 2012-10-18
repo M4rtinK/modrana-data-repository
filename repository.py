@@ -117,8 +117,23 @@ class Package(object):
   def getLoadingProgress(self):
     return self.loadingProgress
 
+  def _addProcessingTime(self, pTime):
+    self.processingTime+=pTime
+
+  def getProcessingTime(self):
+    """return how long this package took to process so far in seconds"""
+    return self.processingTime
+
+  def _timeit(self, fn):
+    def wrapped():
+      start = time.time()
+      fn()
+      self._addProcessingTime(time.time()- start)
+    return wrapped
+
   def startLoading(self):
     pass
+
 
   def startProcessing(self):
     pass
