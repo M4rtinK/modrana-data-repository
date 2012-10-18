@@ -19,7 +19,31 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
 
-from repository import Package
+from repository import Package, Repository
+import csv
+
+SOURCE_DATA_URLS = "osm_pbf_extracts.csv"
+
+class MonavRepository(Repository):
+  def __init__(self):
+    Repository.__init__()
+
+  def update(self):
+    self._downloadData()
+
+  def _loadData(self, sourceQueue):
+    pass
+
+  def _processPackage(self, sourceQueue, packQueue):
+    pass
+
+  def _packagePackage(self, packQueue, publishQueue):
+    pass
+
+  def _publishPackage(self, publishQueue):
+    pass
+
+
 
 class MonavPackage(Package):
   def __init__(self, url):

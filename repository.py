@@ -19,8 +19,55 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
 
+import multiprocessing as mp
+from monav import MonavRepository
+
+# pool & queue sizes
+CPU_COUNT = mp.cpu_count()
+QUEUE_SIZE = CPU_COUNT*2
+SOURCE_DATA_QUEUE_SIZE = QUEUE_SIZE
+PROCESSING_POOL_SIZE = CPU_COUNT
+PACKAGING_QUEUE_SIZE = QUEUE_SIZE
+PACKAGING_POOL_SIZE = CPU_COUNT
+PUBLISHING_QUEUE_SIZE = QUEUE_SIZE
+# keywords
+SHUTDOWN_KEYWORD = "shutdown"
+
+
 class Repository(object):
   def __init__(self):
+    # is fed by the data loader
+    self.sourceQueue = mp.Queue(SOURCE_DATA_QUEUE_SIZE)
+    # the processing pool consumes from the source queue
+    self.processingPool = mp.Pool(CPU_COUNT)
+    self.packagingQueue = mp.Queue(PACKAGING_QUEUE_SIZE)
+    self.packagingPool = mp.Pool(CPU_COUNT)
+    self.publishQueue = mp.Queue(PUBLISHING_QUEUE_SIZE)
+
+    self.loadingProcess = None
+    self.publishingProcess = None
+
+  def update(self):
+    # start the loading process
+    self.loadingProcess = mp.Process(target=self._loadData, args=self.sourceQueue)
+    # start the processing processes
+    self.processingPool.apply_async(func=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
+    # start the packaging processes
+    self.processingPool.apply_async(func=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
+
+    # start the publishing process
+    self.publishingProcess = mp.Process(target=self._loadData, args=self.publishQueue)
+
+  def _loadData(self, sourceQueue):
+    pass
+
+  def _processPackage(self, sourceQueue, packQueue):
+    pass
+
+  def _packagePackage(self, packQueue, publishQueue):
+    pass
+
+  def _publishPackage(self, publishQueue):
     pass
 
 class Package(object):
@@ -49,10 +96,25 @@ class Package(object):
   def getState(self):
     return self.state
 
-  def clear(self):
-    """remove any data in storage created by this package"""
+  def startProcessing(self):
     pass
 
+  def startPackaging(self):
+    pass
+
+  def clearSource(self):
+    """remove any source data for this package"""
+    pass
+
+  def clearResults(self):
+    """remove any result data for this package"""
+    pass
 
 def main(self):
-  print("starting repository update")
+  print("## starting repository update ##")
+
+  print("## updating Monav repository" )
+  monav = MonavRepository()
+  monav.update()
+
+main()
