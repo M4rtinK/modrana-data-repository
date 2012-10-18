@@ -20,6 +20,7 @@
 #---------------------------------------------------------------------------
 
 import multiprocessing as mp
+import os
 from monav import MonavRepository
 
 # pool & queue sizes
@@ -32,7 +33,9 @@ PACKAGING_POOL_SIZE = CPU_COUNT
 PUBLISHING_QUEUE_SIZE = QUEUE_SIZE
 # keywords
 SHUTDOWN_KEYWORD = "shutdown"
-
+# folders
+TEMP_PATH = "temp"
+RESULTS_PATH = "results"
 
 class Repository(object):
   def __init__(self):
@@ -69,6 +72,15 @@ class Repository(object):
 
   def _publishPackage(self, publishQueue):
     pass
+
+  def _getFolderName(self):
+    pass
+
+  def getTempPath(self):
+    return os.path.join(TEMP_PATH, self._getFolderName())
+
+  def getResultsPath(self):
+    return os.path.join(RESULTS_PATH, self._getFolderName())
 
 class Package(object):
   # states
