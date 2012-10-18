@@ -28,9 +28,12 @@ import os
 
 SOURCE_DATA_URLS_CSV = "osm_pbf_extracts.csv"
 
+PREPROCESSOR_PATH = "monav-preprocessor"
+
 class MonavRepository(Repository):
-  def __init__(self):
-    Repository.__init__()
+  def __init__(self, args, conf):
+    Repository.__init__(args, conf)
+    self.preprocessorPath = conf.get('monav', 'monav_preprocessor_path', PREPROCESSOR_PATH)
 
   def update(self):
     self._downloadData()

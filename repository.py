@@ -163,7 +163,7 @@ def main(self):
 
   print("## updating Monav repository" )
   start = time.clock()
-  monav = MonavRepository()
+  monav = MonavRepository(args, conf)
   monav.update()
   dt = int(time.clock - start)
   print("## Monav repository updated in %d s" % dt)
