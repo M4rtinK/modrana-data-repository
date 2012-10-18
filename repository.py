@@ -114,6 +114,9 @@ class Package(object):
   def getState(self):
     return self.state
 
+  def getLoadingProgress(self):
+    return self.loadingProgress
+
   def startLoading(self):
     pass
 
