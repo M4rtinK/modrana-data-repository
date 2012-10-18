@@ -87,7 +87,7 @@ class Repository(object):
 class Package(object):
   # states
 
-  DOWNLOADING = 1
+  LOADING = 1
   PROCESSING = 2
   DONE = 3
 
@@ -109,6 +109,9 @@ class Package(object):
 
   def getState(self):
     return self.state
+
+  def startLoading(self):
+    pass
 
   def startProcessing(self):
     pass
