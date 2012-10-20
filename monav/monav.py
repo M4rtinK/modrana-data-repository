@@ -30,8 +30,9 @@ SOURCE_DATA_URLS_CSV = "osm_pbf_extracts.csv"
 PREPROCESSOR_PATH = "monav-preprocessor"
 
 class MonavRepository(Repository):
-  def __init__(self, args, conf):
-    Repository.__init__(args, conf)
+  def __init__(self, manager):
+    Repository.__init__(manager)
+    conf = manager.getConfig()
     self.preprocessorPath = conf.get('monav', 'monav_preprocessor_path', PREPROCESSOR_PATH)
 
   def update(self):
@@ -89,7 +90,7 @@ class MonavRepository(Repository):
     print('monav publisher: shutting down')
 
 class MonavPackage(Package):
-  def __init__(self, url, tempPath, id):
+  def __init__(self, url, tempPath, id, ):
     Package.__init__()
     self.url = url
     self.tempPath = tempPath

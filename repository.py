@@ -42,9 +42,9 @@ RESULTS_PATH = "results"
 CONFIG_FILE_PATH = "repository.conf"
 
 class Repository(object):
-  def __init__(self, args, conf):
-    self.args = args
-    self.conf = conf
+  def __init__(self, manager):
+    self.manager = manager
+
     # is fed by the data loader
     self.sourceQueue = mp.Queue(SOURCE_DATA_QUEUE_SIZE)
     # the processing pool consumes from the source queue
@@ -153,20 +153,39 @@ class Package(object):
     """remove any result data for this package"""
     pass
 
-def main(self):
-  # load the configuration file
-  conf = ConfigParser.ConfigParser()
-  conf.read(CONFIG_FILE_PATH)
-  args = None # TODO: CLI options handling
+class Manager(object):
+  """manages the overall repository state, including updating all
+  sub-repositories"""
+  def __init__(self):
+    # load the configuration file
+    self.conf = ConfigParser.ConfigParser()
+    self.conf.read(CONFIG_FILE_PATH)
+    self.args = None # TODO: CLI options handling
 
-  print("## starting repository update ##")
+    # for now, update all repositories
+    self.updateAll()
 
-  print("## updating Monav repository" )
-  start = time.clock()
-  monav = MonavRepository(args, conf)
-  monav.update()
-  dt = int(time.clock - start)
-  print("## Monav repository updated in %d s" % dt)
+  def updateAll(self):
+
+    print("## starting repository update ##")
+
+    print("## updating Monav repository" )
+    start = time.clock()
+    monav = MonavRepository(self)
+    monav.update()
+    dt = int(time.clock - start)
+    print("## Monav repository updated in %d s" % dt)
+
+  def getConf(self):
+    """return parsed config file"""
+    return self.conf
+
+  def getArgs(self):
+    """return the CLI options dictionary"""
+    return self.args
 
 
-main()
+if __name__ =='__main__':
+  Manager()
+
+
