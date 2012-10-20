@@ -37,3 +37,26 @@ def zipDir(path, zipFilename):
     for file in files:
       zip.write(os.path.join(root, file))
   zip.close()
+
+def createFolderPath(newPath):
+  """Create a path for a directory and all needed parent folders
+  -> parent directories will be created
+  -> if directory already exists, then do nothing
+  -> if there is another filesystem object (like a file)
+  with the same name exists, raise an exception"""
+  if not newPath:
+    print("cannot create folder, wrong path: ", newPath)
+    return False
+  if os.path.isdir(newPath):
+    return True
+  elif os.path.isfile(newPath):
+    print("cannot create directory, file already exists: '%s'" % newPath)
+    return False
+  else:
+    print("creating path: %s" % newPath)
+    head, tail = os.path.split(newPath)
+    if head and not os.path.isdir(head):
+      createFolderPath(head) # NOTE: recursion
+    if tail:
+      os.mkdir(newPath)
+    return True
