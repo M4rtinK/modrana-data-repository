@@ -20,7 +20,9 @@
 #---------------------------------------------------------------------------
 import urllib2
 
-from repository import Package, Repository, SHUTDOWN_KEYWORD
+from core.package import Package
+from core.repo import Repository
+import core.repo as repo
 import csv
 import urlparse
 import os
@@ -31,21 +33,19 @@ PREPROCESSOR_PATH = "monav-preprocessor"
 
 class MonavRepository(Repository):
   def __init__(self, manager):
-    Repository.__init__(manager)
+    Repository.__init__(self, manager)
     conf = manager.getConfig()
     self.preprocessorPath = conf.get('monav', 'monav_preprocessor_path', PREPROCESSOR_PATH)
 
-  def update(self):
-    self._downloadData()
-
-  def _loadData(self, tempPath, sourceQueue):
+  def _loadData(self, sourceQueue):
+    tempPath = self.manager.getTempPath()
     reader = csv.reader(SOURCE_DATA_URLS_CSV)
     print('monav loader: starting')
     packId = 0
     for row in reader:
       if len(row) > 0:
+        url = row[0]
         try:
-          url = row[0]
           pack = MonavPackage(url, tempPath, packId)
           packId+=1
           sourceQueue.put(pack)
@@ -58,7 +58,7 @@ class MonavRepository(Repository):
     """process OSM data in the PBF format into Monav routing data"""
     while True:
       package = sourceQueue.get()
-      if package == SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_KEYWORD:
         break
       # process the data
       package.process()
@@ -72,7 +72,7 @@ class MonavRepository(Repository):
     sequentially to three separate archives"""
     while True:
       package = packQueue.get()
-      if package == SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_KEYWORD:
         break
       # packaging
       package.package()
@@ -85,13 +85,13 @@ class MonavRepository(Repository):
     and update the repository manifest accordingly"""
     while True:
       package = publishQueue.get()
-      if package == SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_KEYWORD:
         break
     print('monav publisher: shutting down')
 
 class MonavPackage(Package):
   def __init__(self, url, tempPath, id, ):
-    Package.__init__()
+    Package.__init__(self)
     self.url = url
     self.tempPath = tempPath
     self.id = id
