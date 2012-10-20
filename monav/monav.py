@@ -39,8 +39,22 @@ class MonavRepository(Repository):
     conf = manager.getConfig()
     self.preprocessorPath = conf.get('monav', 'monav_preprocessor_path', PREPROCESSOR_PATH)
 
+  def getName(self):
+    return "Monav"
+
+  def getFolderName(self):
+    return "monav"
+
+  def _preUpdate(self):
+    """make sure temporary & publishing folders exist"""
+    if utils.createFolderPath(self.getTempPath()) == False:
+      return False
+    if utils.createFolderPath(self.getPublishPath()):
+      return False
+    return True
+
   def _loadData(self, sourceQueue):
-    tempPath = self.manager.getTempPath()
+    tempPath = self.getTempPath()
     reader = csv.reader(SOURCE_DATA_URLS_CSV)
     print('monav loader: starting')
     packId = 0

@@ -52,9 +52,18 @@ class Repository(object):
     self.loadingProcess = None
     self.publishingProcess = None
 
+  def getName(self):
+    pass
+
+  def getFolderName(self):
+    """return folder name for the repository"""
+    pass
+
   def update(self):
     # run pre-update
-    self._preUpdate()
+    if self._preUpdate() == False:
+      print('repository pre-update failed')
+      return False
     # start the loading process
     tempPath = self.getTempPath()
     self.loadingProcess = mp.Process(target=self._loadData, args=(tempPath, self.sourceQueue))
@@ -65,7 +74,10 @@ class Repository(object):
     # start the publishing process
     self.publishingProcess = mp.Process(target=self._loadData, args=self.publishQueue)
     # run post-update
-    self._postUpdate()
+    if self._postUpdate() == False:
+      print('repository post-update failed')
+      return False
+    return True
 
   def _preUpdate(self):
     """this method is called before starting the repository update"""
@@ -89,14 +101,11 @@ class Repository(object):
   def _publishPackage(self, publishQueue):
     pass
 
-  def _getFolderName(self):
-    pass
-
 
   ## Paths ##
   def getTempPath(self):
-    return os.path.join(TEMP_PATH, self._getFolderName())
+    return os.path.join(TEMP_PATH, self.getFolderName())
 
-  def getResultsPath(self):
-    return os.path.join(RESULTS_PATH, self._getFolderName())
+  def getPublishPath(self):
+    return os.path.join(RESULTS_PATH, self.getFolderName())
 
