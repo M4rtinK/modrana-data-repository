@@ -53,6 +53,8 @@ class Repository(object):
     self.publishingProcess = None
 
   def update(self):
+    # run pre-update
+    self._preUpdate()
     # start the loading process
     tempPath = self.getTempPath()
     self.loadingProcess = mp.Process(target=self._loadData, args=(tempPath, self.sourceQueue))
@@ -62,7 +64,19 @@ class Repository(object):
     self.processingPool.apply_async(func=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
     # start the publishing process
     self.publishingProcess = mp.Process(target=self._loadData, args=self.publishQueue)
+    # run post-update
+    self._postUpdate()
 
+  def _preUpdate(self):
+    """this method is called before starting the repository update"""
+    pass
+
+  def _postUpdate(self):
+    """this method is called after finishing the repository update """
+    pass
+
+
+  ## Multiprocessing tasks ##
   def _loadData(self, sourceQueue):
     pass
 
@@ -78,6 +92,8 @@ class Repository(object):
   def _getFolderName(self):
     pass
 
+
+  ## Paths ##
   def getTempPath(self):
     return os.path.join(TEMP_PATH, self._getFolderName())
 
