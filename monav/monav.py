@@ -65,7 +65,13 @@ class MonavRepository(Repository):
       if len(row) > 0:
         url = row[0]
         try:
-          pack = MonavPackage(url, tempPath, packId)
+          metadata = {
+            'packId' : packId,
+            'tempPath' : tempPath,
+            'helperPath' : self.getFolderName(),
+            'preprocessorPath' : self.preprocessorPath
+          }
+          pack = MonavPackage(url, metadata)
           packId+=1
           print('monav loader: downloading %s' % pack.getName())
           pack.load()
@@ -113,11 +119,11 @@ class MonavRepository(Repository):
     print('monav publisher: shutting down')
 
 class MonavPackage(Package):
-  def __init__(self, url, tempPath, id, ):
+  def __init__(self, url, metadata):
     Package.__init__(self)
     self.url = url
-    self.tempPath = tempPath
-    self.id = id
+    self.helperPath = metadata['helperPath'] # for accessing the base.ini file for Monav preprocessor
+    self.preprocessorPath = metadata['preprocessorPath']
     # get the storage path from the URL
     wholePath = urlparse.urlparse(url)[2]
     # split to filename & folder path
@@ -125,7 +131,7 @@ class MonavPackage(Package):
     # get the filename without extensions
     self.name = self.filename.split('.')[0]
     # working directory during the processing phase
-    self.tempStoragePath = os.path.join(tempPath, "%d" % id, self.name)
+    self.tempStoragePath = os.path.join(metadata['tempPath'], "%d" % metadata['packId'], self.name)
     # path to the source data file
     self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
     # paths to resulting data files
@@ -134,15 +140,19 @@ class MonavPackage(Package):
   def load(self):
     """download PBF extract from the URL and store it locally"""
     try:
-      if os.path.exists(self.tempStoragePath):
-        print('removing old folder %s' % self.tempStoragePath)
-        shutil.rmtree(self.tempStoragePath)
-      utils.createFolderPath(self.tempStoragePath)
-      f = open(self.sourceDataPath, "w")
-      request = urllib2.urlopen(self.url)
-      f.write(request.read())
-      f.close()
-      return True
+      if os.path.exists(self.sourceDataPath):
+        return
+        # TODO: DEBUG, remove this
+      else:
+        if os.path.exists(self.tempStoragePath):
+          print('removing old folder %s' % self.tempStoragePath)
+          shutil.rmtree(self.tempStoragePath)
+        utils.createFolderPath(self.tempStoragePath)
+        f = open(self.sourceDataPath, "w")
+        request = urllib2.urlopen(self.url)
+        f.write(request.read())
+        f.close()
+        return True
     except Exception, e:
       message = 'monav package: OSM PBF download failed\n'
       message+= 'name: %s\n' % self.name
@@ -158,27 +168,30 @@ class MonavPackage(Package):
     try:
       inputFile = self.sourceDataPath
       outputFolder = self.tempStoragePath
-
+      baseINIPath = os.path.join(self.helperPath, "base.ini")
+      prepPath = self.preprocessorPath
+      print('processing %s' % self.getName())
       # first pass - import data, create address info & generate car routing data
-      args1 = ['monav-preprocessor', '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+      args1 = ['%s' % prepPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"']
       # second pass - import data, generate bike routing data
-      args2 = ['monav-preprocessor', '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+      args2 = ['%s' % prepPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"']
       # third pass - import data, process pedestrian routing data & delete temporary files
-      args3 = ['monav-preprocessor', '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+      args3 = ['%s' % prepPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
 
       # convert the arguments to whitespace delimited strings and run them
-      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=False)
       return True
     except Exception, e:
       message = 'monav package: Monav routing data processing failed\n'
       message+= 'name: %s' % self.name
       print(message)
       print(e)
+      traceback.print_exc(file=sys.stdout)
       return False
 
   def package(self):

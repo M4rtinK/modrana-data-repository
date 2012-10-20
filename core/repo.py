@@ -69,11 +69,13 @@ class Repository(object):
     self.loadingProcess = mp.Process(target=self._loadData, args=(self.sourceQueue,))
     self.loadingProcess.start()
     # start the processing processes
-#    self.processingPool.apply_async(func=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
-#    # start the packaging processes
-#    self.processingPool.apply_async(func=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
+    for i in range(PROCESSING_POOL_SIZE):
+      mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue)).start()
+    # start the packaging processes
+    for i in range(PROCESSING_POOL_SIZE):
+      mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue)).start()
 #    # start the publishing process
-#    self.publishingProcess = mp.Process(target=self._loadData, args=(self.publishQueue,))
+    self.publishingProcess = mp.Process(target=self._loadData, args=(self.publishQueue,))
     # run post-update
     if self._postUpdate() == False:
       print('repository post-update failed')
