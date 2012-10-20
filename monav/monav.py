@@ -49,7 +49,7 @@ class MonavRepository(Repository):
     """make sure temporary & publishing folders exist"""
     if utils.createFolderPath(self.getTempPath()) == False:
       return False
-    if utils.createFolderPath(self.getPublishPath()):
+    if utils.createFolderPath(self.getPublishPath()) == False:
       return False
     return True
 
