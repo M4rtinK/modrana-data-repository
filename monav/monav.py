@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Monav data repository
@@ -18,14 +17,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
+import shutil
+import subprocess
 import urllib2
+import csv
+import urlparse
+import os
 
 from core.package import Package
 from core.repo import Repository
 import core.repo as repo
-import csv
-import urlparse
-import os
+import core.utils as utils
 
 SOURCE_DATA_URLS_CSV = "osm_pbf_extracts.csv"
 
@@ -103,13 +105,85 @@ class MonavPackage(Package):
     self.name = self.filename.split('.')[0]
     # working directory during the processing phase
     self.tempStoragePath = os.path.join(tempPath, "%d" % id, self.name)
+    # path to the source data file
     self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
+    # paths to resulting data files
+    self.results = []
 
   def load(self):
     """download PBF extract from the URL and store it locally"""
-    os.makedirs(self.tempStoragePath)
-    request = urllib2.urlopen(self.url)
-    f = open(self.sourceDataPath, "w")
-    f.write(request.read())
-    f.close()
+    try:
+      os.makedirs(self.tempStoragePath)
+      request = urllib2.urlopen(self.url)
+      f = open(self.sourceDataPath, "w")
+      f.write(request.read())
+      f.close()
+      return True
+    except Exception, e:
+      message = 'monav package: OSM PBF download failed\n'
+      message+= 'name: %s\n' % self.name
+      message+= 'URL: %s\n' % self.url
+      message+= 'storage path: %s' % self.sourceDataPath
+      print(message)
+      print(e)
+      return False
 
+  def process(self, threads=1):
+    """process the PBF extract into Monav routing data"""
+    try:
+      inputFile = self.sourceDataPath
+      outputFolder = self.tempStoragePath
+
+      # first pass - import data, create address info & generate car routing data
+      args1 = ['monav-preprocessor', '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"']
+      # second pass - import data, generate bike routing data
+      args2 = ['monav-preprocessor', '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"']
+      # third pass - import data, process pedestrian routing data & delete temporary files
+      args3 = ['monav-preprocessor', '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="base.ini"',
+               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
+
+      # convert the arguments to whitespace delimited strings and run them
+      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True)
+      return True
+    except Exception, e:
+      message = 'monav package: Monav routing data processing failed\n'
+      message+= 'name: %s' % self.name
+      print(message)
+      print(e)
+      return False
+
+  def package(self):
+    """compress the Monav routing data"""
+    modes = ["car", "bike", "pedestrian"]
+    for mode in modes:
+      path = os.path.join(self.tempStoragePath, "routing_%s" % mode)
+      archivePath = os.path.join(self.tempStoragePath, "%s_%s.tar.gz" % (self.name, mode))
+      try:
+        utils.tarDir(path, archivePath)
+        #TODO: MD5 hash for archives
+        self.results.append(archivePath)
+      except Exception, e:
+        message = 'monav package: compression failed\n'
+        message+= 'path: %s' % path
+        message+= 'archive: %s' % archivePath
+        print(message)
+        print(e)
+
+  def publish(self, targetPath, cleanup=False):
+    """publish the package to the online repository"""
+    for path2file in self.results:
+      try:
+        shutil.move(path2file, targetPath)
+      except Exception, e:
+        message = 'monav package: publishing failed\n'
+        message+= 'file: %s' % path2file
+        message+= 'target path: %s' % targetPath
+        print(message)
+        print(e)
+    if cleanup: # clean up any source & temporary files
+      self.clearSource()
+      self.clearResults()
