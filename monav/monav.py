@@ -23,6 +23,8 @@ import urllib2
 import csv
 import urlparse
 import os
+import traceback
+import sys
 
 from core.package import Package
 from core.repo import Repository
@@ -55,7 +57,8 @@ class MonavRepository(Repository):
 
   def _loadData(self, sourceQueue):
     tempPath = self.getTempPath()
-    reader = csv.reader(SOURCE_DATA_URLS_CSV)
+    f = open(os.path.join(self.getFolderName(), SOURCE_DATA_URLS_CSV), "r")
+    reader = csv.reader(f)
     print('monav loader: starting')
     packId = 0
     for row in reader:
@@ -64,10 +67,14 @@ class MonavRepository(Repository):
         try:
           pack = MonavPackage(url, tempPath, packId)
           packId+=1
+          print('monav loader: downloading %s' % pack.getName())
+          pack.load()
           sourceQueue.put(pack)
         except Exception, e:
           print('monav loader: loading url failed: %s' % url)
           print(e)
+#          traceback.print_exc(file=sys.stdout)
+    f.close()
     print('monav loader: all downloads finished')
 
   def _processPackage(self, sourceQueue, packQueue):
