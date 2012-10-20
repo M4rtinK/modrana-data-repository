@@ -73,7 +73,7 @@ class MonavRepository(Repository):
         except Exception, e:
           print('monav loader: loading url failed: %s' % url)
           print(e)
-#          traceback.print_exc(file=sys.stdout)
+          traceback.print_exc(file=sys.stdout)
     f.close()
     print('monav loader: all downloads finished')
 
@@ -134,9 +134,12 @@ class MonavPackage(Package):
   def load(self):
     """download PBF extract from the URL and store it locally"""
     try:
-      os.makedirs(self.tempStoragePath)
-      request = urllib2.urlopen(self.url)
+      if os.path.exists(self.tempStoragePath):
+        print('removing old folder %s' % self.tempStoragePath)
+        shutil.rmtree(self.tempStoragePath)
+      utils.createFolderPath(self.tempStoragePath)
       f = open(self.sourceDataPath, "w")
+      request = urllib2.urlopen(self.url)
       f.write(request.read())
       f.close()
       return True
@@ -147,6 +150,7 @@ class MonavPackage(Package):
       message+= 'storage path: %s' % self.sourceDataPath
       print(message)
       print(e)
+      traceback.print_exc(file=sys.stdout)
       return False
 
   def process(self, threads=1):
