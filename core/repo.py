@@ -21,10 +21,6 @@
 
 import multiprocessing as mp
 import os
-import time
-
-from monav import MonavRepository
-import ConfigParser
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()

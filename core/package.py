@@ -19,8 +19,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
 
-import multiprocessing as mp
-import os
 import time
 
 from monav import MonavRepository
