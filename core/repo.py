@@ -67,15 +67,26 @@ class Repository(object):
     # start the loading process
     tempPath = self.getTempPath()
     self.loadingProcess = mp.Process(target=self._loadData, args=(self.sourceQueue,))
+    self.loadingProcess.daemon = True
     self.loadingProcess.start()
     # start the processing processes
     for i in range(PROCESSING_POOL_SIZE):
-      mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue)).start()
+      p = mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
+      p.daemon = True
+      p.start()
     # start the packaging processes
     for i in range(PROCESSING_POOL_SIZE):
-      mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue)).start()
+      p = mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
+      p.daemon = True
+      p.start()
 #    # start the publishing process
-    self.publishingProcess = mp.Process(target=self._loadData, args=(self.publishQueue,))
+    self.publishingProcess = mp.Process(target=self._publishPackage, args=(self.publishQueue,),)
+    self.publishingProcess.daemon = True
+    self.publishingProcess.start()
+    self.publishingProcess.join()
+    # as the publishing process is the last one to handle work related to the update,
+    # we join it to wait for the repository update to finish
+
     # run post-update
     if self._postUpdate() == False:
       print('repository post-update failed')
