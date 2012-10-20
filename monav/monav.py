@@ -53,7 +53,6 @@ class MonavRepository(Repository):
           print(e)
     print('monav loader: all downloads finished')
 
-
   def _processPackage(self, sourceQueue, packQueue):
     """process OSM data in the PBF format into Monav routing data"""
     while True:
@@ -61,7 +60,7 @@ class MonavRepository(Repository):
       if package == SHUTDOWN_KEYWORD:
         break
       # process the data
-      package.startProcessing()
+      package.process()
       # forward the package to the packaging pool
       packQueue.put(package)
     print('monav processing: shutting down')
@@ -75,7 +74,7 @@ class MonavRepository(Repository):
       if package == SHUTDOWN_KEYWORD:
         break
       # packaging
-      package.startPackaging()
+      package.package()
       # forward the package to the publishing process
       publishQueue.put(package)
     print('monav packaging: shutting down')
@@ -101,9 +100,11 @@ class MonavPackage(Package):
     self.repoPath, self.filename = os.path.split(wholePath)
     # get the filename without extensions
     self.name = self.filename.split('.')[0]
+    # working directory during the processing phase
     self.tempStoragePath = os.path.join(tempPath, "%d" % id, self.name)
     self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
-  def startLoading(self):
+
+  def load(self):
     """download PBF extract from the URL and store it locally"""
     os.makedirs(self.tempStoragePath)
     request = urllib2.urlopen(self.url)

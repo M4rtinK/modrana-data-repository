@@ -135,14 +135,14 @@ class Package(object):
       self._addProcessingTime(time.time()- start)
     return wrapped
 
-  def startLoading(self):
+  def load(self):
     pass
 
 
-  def startProcessing(self):
+  def process(self):
     pass
 
-  def startPackaging(self):
+  def package(self):
     pass
 
   def clearSource(self):
