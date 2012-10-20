@@ -61,7 +61,7 @@ class Manager(object):
     start = time.clock()
     monav = MonavRepository(self)
     monav.update()
-    dt = int(time.clock - start)
+    dt = int(time.clock() - start)
     print("## Monav repository updated in %d s" % dt)
 
   def getConfig(self):
