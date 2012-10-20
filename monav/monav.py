@@ -37,7 +37,7 @@ class MonavRepository(Repository):
   def __init__(self, manager):
     Repository.__init__(self, manager)
     conf = manager.getConfig()
-    self.preprocessorPath = conf.get('monav', 'monav_preprocessor_path', PREPROCESSOR_PATH)
+    self.preprocessorPath = conf.get('monav_preprocessor_path', PREPROCESSOR_PATH)
 
   def getName(self):
     return "Monav"

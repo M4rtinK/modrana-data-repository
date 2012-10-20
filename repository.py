@@ -24,6 +24,7 @@ import os
 import time
 
 from monav import MonavRepository
+from core.configobj.configobj import ConfigObj
 import ConfigParser
 
 # pool & queue sizes
@@ -46,8 +47,7 @@ class Manager(object):
   sub-repositories"""
   def __init__(self):
     # load the configuration file
-    self.conf = ConfigParser.ConfigParser()
-    self.conf.read(CONFIG_FILE_PATH)
+    self.conf = ConfigObj(CONFIG_FILE_PATH)
     self.args = None # TODO: CLI options handling
 
     # for now, update all repositories
@@ -64,7 +64,7 @@ class Manager(object):
     dt = int(time.clock - start)
     print("## Monav repository updated in %d s" % dt)
 
-  def getConf(self):
+  def getConfig(self):
     """return parsed config file"""
     return self.conf
 
