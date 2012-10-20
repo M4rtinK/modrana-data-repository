@@ -21,9 +21,6 @@
 
 import time
 
-from monav import MonavRepository
-import ConfigParser
-
 class Package(object):
   # states
 
@@ -72,13 +69,25 @@ class Package(object):
     return wrapped
 
   def load(self):
+    """load any source data needed by the package to storage"""
     pass
 
-
   def process(self):
+    """process the source data"""
     pass
 
   def package(self):
+    """package the results"""
+    pass
+
+  def publish(self, path):
+    """publish the data to the online repository"""
+    pass
+
+  def getResults(self):
+    """return a list file-paths pointing to results
+    of the processing & packaging steps that now need to be published
+    """
     pass
 
   def clearSource(self):
