@@ -112,10 +112,13 @@ class MonavRepository(Repository):
   def _publishPackage(self, publishQueue):
     """tak the compressed TARs and publish them to the modRana public folder
     and update the repository manifest accordingly"""
+    print('monav publisher: starting')
     while True:
       package = publishQueue.get()
       if package == repo.SHUTDOWN_KEYWORD:
         break
+      print('publishing %s' % package.getName())
+      package.publish(self.getPublishPath())
     print('monav publisher: shutting down')
 
 class MonavPackage(Package):
