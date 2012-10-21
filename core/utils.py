@@ -70,7 +70,7 @@ def prettyTimeDiff(dtSeconds):
   pretty string like 'an hour ago', 'Yesterday', '3 months ago',
   'just now', etc
   """
-  diff = datetime.timedelta(second_diff=dtSeconds)
+  diff = datetime.timedelta(seconds=dtSeconds)
   second_diff = diff.seconds
   day_diff = diff.days
 
