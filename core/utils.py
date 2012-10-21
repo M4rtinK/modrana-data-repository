@@ -93,10 +93,11 @@ def path2components(path, maxDepth = 4096):
   components.reverse() # revert back to the real order
   return components
 
-def url2repoPathFilename(url, urlType):
+def url2repoPathFilenameName(url, urlType):
   """extract the repository storage path from the source data URL"""
   wholePath = urlparse.urlparse(url)[2]
   rawRepoPath, filename = os.path.split(wholePath)
+  name = filename.split('.')[0]
   if urlType == URL_GEOFABRIK:
     # we are currently using the Geofabrik URLs with the openstreetmap prefix
     # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
@@ -112,7 +113,11 @@ def url2repoPathFilename(url, urlType):
     repoSubPath = os.path.join(*components[cutIndex:])
   else:
     repoSubPath = rawRepoPath
-  return repoSubPath, filename
+  # add the package name to the repoSub path
+  # so that all the mode packages, checksum files, etc.
+  # share a folder
+  repoSubPath = os.path.join(repoSubPath, name)
+  return repoSubPath, filename, name
 
 
   # based on http://stackoverflow.com/a/1551394

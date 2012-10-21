@@ -139,10 +139,7 @@ class MonavPackage(Package):
     # split to repoSubPath & filename
     # -> repoSubPath = continent/country/etc.
     urlType = metadata['urlType']
-    self.repoSubPath, self.filename = utils.url2repoPathFilename(url, urlType)
-
-    # get the filename without extensions
-    self.name = self.filename.split('.')[0]
+    self.repoSubPath, self.filename, self.name = utils.url2repoPathFilenameName(url, urlType)
     # a temporary working directory for this package only (unique id prefix)
     self.tempPath = os.path.join(metadata['tempPath'], str(metadata['packId']))
     # a subdirectory named after the package
