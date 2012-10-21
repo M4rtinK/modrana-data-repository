@@ -54,7 +54,7 @@ def createFolderPath(newPath):
     print("cannot create directory, file already exists: '%s'" % newPath)
     return False
   else:
-    print("creating path: %s" % newPath)
+#    print("creating path: %s" % newPath)
     head, tail = os.path.split(newPath)
     if head and not os.path.isdir(head):
       createFolderPath(head) # NOTE: recursion
