@@ -119,9 +119,6 @@ class Repository(object):
       # wait for the shutdown signals to be processed
       queue.join()
 
-
-
-
   def getProcessingPoolSize(self):
     """returns the number of threads to start in the data processing pool
     NOTE: this number should not change once the processing threads are started,

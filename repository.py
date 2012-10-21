@@ -25,7 +25,7 @@ import time
 
 from monav import MonavRepository
 from core.configobj.configobj import ConfigObj
-import ConfigParser
+from core import utils
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()
@@ -58,11 +58,19 @@ class Manager(object):
     print("## starting repository update ##")
 
     print("## updating Monav repository" )
-    start = time.clock()
+    start = time.time()
     monav = MonavRepository(self)
     monav.update()
-    dt = int(time.clock() - start)
-    print("## Monav repository updated in %d s" % dt)
+    dt = int(time.time() - start)
+    if dt > 60:
+      prettyTime = "%s (%d s)" % (utils.prettyTimeDiff(dt), dt)
+      # show seconds for exact benchmarking once pretty time
+      # switches to larger units
+    else:
+      prettyTime = utils.prettyTimeDiff(dt)
+    print("## Monav repository updated in %s " % prettyTime)
+
+    print("## repository update finished ##")
 
   def getConfig(self):
     """return parsed config file"""
