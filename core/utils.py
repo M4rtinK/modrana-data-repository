@@ -23,20 +23,31 @@ import tarfile
 import zipfile
 import datetime
 
-def tarDir(path, tarFilename):
+def tarDir(path, tarFilename, fakeRoot=None):
   """compress all files in a directory to a (compressed) tar archive"""
   tar = tarfile.TarFileCompat(tarFilename, 'w', tarfile.TAR_GZIPPED)
   for root, dirs, files in os.walk(path):
     for file in files:
-      tar.write(os.path.join(root, file))
+      # use the fake package root if provided
+      if fakeRoot:
+        inPath = os.path.join(root, file)
+        archPath = os.path.relpath(inPath, fakeRoot)
+        tar.write(inPath, archPath)
+      else:
+        tar.write(os.path.join(root, file))
   tar.close()
 
-def zipDir(path, zipFilename):
+def zipDir(path, zipFilename, fakeRoot=None):
   """compress all files in a directory to a zip archive"""
   zip = zipfile.ZipFile(zipFilename, 'w', zipfile.ZIP_DEFLATED)
   for root, dirs, files in os.walk(path):
     for file in files:
-      zip.write(os.path.join(root, file))
+      if fakeRoot is not None:
+        inPath = os.path.join(root, file)
+        archPath = os.path.relpath(inPath, fakeRoot)
+        zip.write(inPath, archPath)
+      else:
+        zip.write(os.path.join(root, file))
   zip.close()
 
 def createFolderPath(newPath):

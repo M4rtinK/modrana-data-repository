@@ -141,8 +141,10 @@ class MonavPackage(Package):
     self.repoPath, self.filename = os.path.split(wholePath)
     # get the filename without extensions
     self.name = self.filename.split('.')[0]
-    # working directory during the processing phase
-    self.tempStoragePath = os.path.join(metadata['tempPath'], "%d" % metadata['packId'], self.name)
+    # a temporary working directory for this package only (unique id prefix)
+    self.tempPath = os.path.join(metadata['tempPath'], str(metadata['packId']))
+    # a subdirectory named after the package
+    self.tempStoragePath = os.path.join(self.tempPath, self.name)
     # path to the source data file
     self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
     # paths to resulting data files
@@ -208,11 +210,18 @@ class MonavPackage(Package):
   def package(self):
     """compress the Monav routing data"""
     modes = ["car", "bike", "pedestrian"]
+    print('packaging %s' % self.getName())
     for mode in modes:
       path = os.path.join(self.tempStoragePath, "routing_%s" % mode)
       archivePath = os.path.join(self.tempStoragePath, "%s_%s.tar.gz" % (self.name, mode))
       try:
-        utils.tarDir(path, archivePath)
+        # fakeRoot -> we need to have this structure inside the archive:
+        # /country/routing_x/
+        # as the files are stored in temp/monav/number/country/routing_x
+        # we supply a prefix, that is subtracted from the path using os.path.relpath()
+        # Example:
+        # temp/monav/0/azores/routing_car - temp/monav/0 = /azores/routing_car
+        utils.tarDir(path, archivePath, fakeRoot=self.tempPath)
         #TODO: MD5 hash for archives
         self.results.append(archivePath)
       except Exception, e:
@@ -221,6 +230,11 @@ class MonavPackage(Package):
         message+= 'archive: %s' % archivePath
         print(message)
         print(e)
+        traceback.print_exc(file=sys.stdout)
+    if self.results:
+      return True
+    else:
+      return False
 
   def publish(self, targetPath, cleanup=False):
     """publish the package to the online repository"""
