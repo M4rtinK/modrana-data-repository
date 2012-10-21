@@ -21,6 +21,7 @@
 import os
 import tarfile
 import zipfile
+import datetime
 
 def tarDir(path, tarFilename):
   """compress all files in a directory to a (compressed) tar archive"""
@@ -60,3 +61,33 @@ def createFolderPath(newPath):
     if tail:
       os.mkdir(newPath)
     return True
+
+
+# based on http://stackoverflow.com/a/1551394
+def prettyTimeDiff(dtSeconds):
+  """
+  Get a datetime object or a int() Epoch timestamp and return a
+  pretty string like 'an hour ago', 'Yesterday', '3 months ago',
+  'just now', etc
+  """
+  diff = datetime.timedelta(second_diff=dtSeconds)
+  second_diff = diff.seconds
+  day_diff = diff.days
+
+  if day_diff < 0:
+    return ''
+
+  if day_diff == 0:
+    if second_diff < 60:
+      return str(second_diff) + " seconds"
+    if second_diff < 3600:
+      return str( second_diff / 60 ) + " minutes"
+    if second_diff < 86400:
+      return str( second_diff / 3600 ) + " hours"
+  if day_diff < 7:
+    return str(day_diff) + " days"
+  if day_diff < 31:
+    return str(day_diff/7) + " weeks"
+  if day_diff < 365:
+    return str(day_diff/30) + " months"
+  return str(day_diff/365) + " years"
