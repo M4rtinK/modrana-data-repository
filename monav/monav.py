@@ -21,7 +21,6 @@ import shutil
 import subprocess
 import urllib2
 import csv
-import urlparse
 import os
 import traceback
 import sys
@@ -57,7 +56,12 @@ class MonavRepository(Repository):
 
   def _loadData(self, sourceQueue):
     tempPath = self.getTempPath()
-    f = open(os.path.join(self.getFolderName(), SOURCE_DATA_URLS_CSV), "r")
+    csvFilePath = os.path.join(self.getFolderName(), SOURCE_DATA_URLS_CSV)
+    # get a CSV line count to get approximate repository update progress
+    urlCount = utils.countCSVLines(csvFilePath)
+    if not urlCount: # just to be sure
+      urlCount = 0
+    f = open(csvFilePath, "r")
     reader = csv.reader(f)
     print('monav loader: starting')
     packId = 0
@@ -74,7 +78,7 @@ class MonavRepository(Repository):
           }
           pack = MonavPackage(url, metadata)
           packId+=1
-          print('monav loader: downloading %s' % pack.getName())
+          print('monav loader: downloading %d/%d: %s ' % (packId, urlCount, pack.getName()))
           pack.load()
           sourceQueue.put(pack)
         except Exception, e:

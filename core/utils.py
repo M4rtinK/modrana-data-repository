@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
+import csv
 
 import os
 import tarfile
@@ -119,7 +120,6 @@ def url2repoPathFilenameName(url, urlType):
   repoSubPath = os.path.join(repoSubPath, name)
   return repoSubPath, filename, name
 
-
   # based on http://stackoverflow.com/a/1551394
 def prettyTimeDiff(dtSeconds):
   """
@@ -148,3 +148,17 @@ def prettyTimeDiff(dtSeconds):
   if day_diff < 365:
     return str(day_diff/30) + " months"
   return str(day_diff/365) + " years"
+
+def countCSVLines(path, minColumns=1):
+  """count all eligible lines in the given CSV file
+  NOTE: this just iterates over the file so it should handle really
+  large CSV files"""
+  f = open(path, "r")
+  reader = csv.reader(f)
+  lineCount = 0
+  for row in reader:
+    if len(row) >= minColumns:
+      lineCount+=1
+  f.close()
+  return lineCount
+
