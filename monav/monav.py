@@ -137,8 +137,22 @@ class MonavPackage(Package):
     self.preprocessorPath = metadata['preprocessorPath']
     # get the storage path from the URL
     wholePath = urlparse.urlparse(url)[2]
-    # split to filename & folder path
-    self.repoPath, self.filename = os.path.split(wholePath)
+    # split to repoSubPath & filename
+    # -> repoSubPath = continent/country/etc.
+    rawRepoPath, self.filename = os.path.split(wholePath)
+    # we are currently using the Geofabrik URLs with the openstreetmap prefix
+    # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
+
+    # normalize the path to get rid of doubled separators, etc.
+    rawRepoPath = os.path.normpath(rawRepoPath)
+    # split it to a list of components
+    components = utils.path2components(rawRepoPath)
+    # ignore leading path separator
+    if components[0] in (os.pathsep, os.altsep):
+      cutIndex = 2
+    else:
+      cutIndex = 1
+    self.repoSubPath = os.path.join(*components[cutIndex:])
     # get the filename without extensions
     self.name = self.filename.split('.')[0]
     # a temporary working directory for this package only (unique id prefix)
@@ -236,15 +250,19 @@ class MonavPackage(Package):
     else:
       return False
 
-  def publish(self, targetPath, cleanup=False):
+  def publish(self, mainRepoPath, cleanup=False):
     """publish the package to the online repository"""
     for path2file in self.results:
+      finalRepoPath = os.path.join(mainRepoPath, self.repoSubPath)
       try:
-        shutil.move(path2file, targetPath)
+        # try to make sure the folder exists
+        utils.createFolderPath(finalRepoPath)
+        # move the results
+        shutil.move(path2file, finalRepoPath)
       except Exception, e:
         message = 'monav package: publishing failed\n'
         message+= 'file: %s' % path2file
-        message+= 'target path: %s' % targetPath
+        message+= 'target path: %s' % finalRepoPath
         print(message)
         print(e)
     if cleanup: # clean up any source & temporary files
