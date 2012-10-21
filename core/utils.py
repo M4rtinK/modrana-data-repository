@@ -25,16 +25,16 @@ import datetime
 
 def tarDir(path, tarFilename, fakeRoot=None):
   """compress all files in a directory to a (compressed) tar archive"""
-  tar = tarfile.TarFileCompat(tarFilename, 'w', tarfile.TAR_GZIPPED)
+  tar = tarfile.TarFile.open(tarFilename, 'w:gz')
   for root, dirs, files in os.walk(path):
     for file in files:
       # use the fake package root if provided
       if fakeRoot:
         inPath = os.path.join(root, file)
         archPath = os.path.relpath(inPath, fakeRoot)
-        tar.write(inPath, archPath)
+        tar.add(inPath, archPath)
       else:
-        tar.write(os.path.join(root, file))
+        tar.add(os.path.join(root, file))
   tar.close()
 
 def zipDir(path, zipFilename, fakeRoot=None):
