@@ -33,9 +33,11 @@ class Package(object):
     self.size = None
     # this timestamp relates to when
     # the source data were last updated
-    self.dataTimestamp = None
-    # path to the data folder
-    self.path = None
+    self.sourceTimestamp = None
+    # repository path suffix
+    # ex.: europe/france/ for French regions
+    self.repoSubPath = ""
+    # current state of package processing
     self.state = None
     # combined time spend on package processing in seconds
     self.processingTime = 0
@@ -44,9 +46,6 @@ class Package(object):
 
   def getName(self):
     return self.name
-
-  def getPath(self):
-    return self.path
 
   def getState(self):
     return self.state

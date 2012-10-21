@@ -69,7 +69,8 @@ class MonavRepository(Repository):
             'packId' : packId,
             'tempPath' : tempPath,
             'helperPath' : self.getFolderName(),
-            'preprocessorPath' : self.preprocessorPath
+            'preprocessorPath' : self.preprocessorPath,
+            'urlType' : self._getSourceUrlType()
           }
           pack = MonavPackage(url, metadata)
           packId+=1
@@ -135,24 +136,11 @@ class MonavPackage(Package):
     self.url = url
     self.helperPath = metadata['helperPath'] # for accessing the base.ini file for Monav preprocessor
     self.preprocessorPath = metadata['preprocessorPath']
-    # get the storage path from the URL
-    wholePath = urlparse.urlparse(url)[2]
     # split to repoSubPath & filename
     # -> repoSubPath = continent/country/etc.
-    rawRepoPath, self.filename = os.path.split(wholePath)
-    # we are currently using the Geofabrik URLs with the openstreetmap prefix
-    # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
+    urlType = metadata['urlType']
+    self.repoSubPath, self.filename = utils.url2repoPathFilename(url, urlType)
 
-    # normalize the path to get rid of doubled separators, etc.
-    rawRepoPath = os.path.normpath(rawRepoPath)
-    # split it to a list of components
-    components = utils.path2components(rawRepoPath)
-    # ignore leading path separator
-    if components[0] in (os.pathsep, os.altsep):
-      cutIndex = 2
-    else:
-      cutIndex = 1
-    self.repoSubPath = os.path.join(*components[cutIndex:])
     # get the filename without extensions
     self.name = self.filename.split('.')[0]
     # a temporary working directory for this package only (unique id prefix)

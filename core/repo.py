@@ -36,6 +36,8 @@ SHUTDOWN_SIGNAL = "shutdown"
 TEMP_PATH = "temp"
 RESULTS_PATH = "results"
 CONFIG_FILE_PATH = "repository.conf"
+# URL types
+GEOFABRIK_URL = 1
 
 class Repository(object):
   def __init__(self, manager):
@@ -160,3 +162,8 @@ class Repository(object):
   def getPublishPath(self):
     return os.path.join(RESULTS_PATH, self.getFolderName())
 
+  ## Source data URLs ##
+  def _getSourceUrlType(self):
+    # TODO: config file switch for setting this,
+    # so that using the URL verbatim is possible
+    return GEOFABRIK_URL

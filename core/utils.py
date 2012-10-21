@@ -20,8 +20,12 @@
 
 import os
 import tarfile
+import urlparse
 import zipfile
 import datetime
+
+# URL types
+URL_GEOFABRIK = 1
 
 def tarDir(path, tarFilename, fakeRoot=None):
   """compress all files in a directory to a (compressed) tar archive"""
@@ -88,6 +92,28 @@ def path2components(path, maxDepth = 4096):
     depth+=1
   components.reverse() # revert back to the real order
   return components
+
+def url2repoPathFilename(url, urlType):
+  """extract the repository storage path from the source data URL"""
+  wholePath = urlparse.urlparse(url)[2]
+  rawRepoPath, filename = os.path.split(wholePath)
+  if urlType == URL_GEOFABRIK:
+    # we are currently using the Geofabrik URLs with the openstreetmap prefix
+    # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
+    # normalize the path to get rid of doubled separators, etc.
+    rawRepoPath = os.path.normpath(rawRepoPath)
+    # split it to a list of components
+    components = path2components(rawRepoPath)
+    # ignore leading path separator
+    if components[0] in (os.pathsep, os.altsep):
+      cutIndex = 2
+    else:
+      cutIndex = 1
+    repoSubPath = os.path.join(*components[cutIndex:])
+  else:
+    repoSubPath = rawRepoPath
+  return repoSubPath, filename
+
 
   # based on http://stackoverflow.com/a/1551394
 def prettyTimeDiff(dtSeconds):
