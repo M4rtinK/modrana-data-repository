@@ -73,8 +73,23 @@ def createFolderPath(newPath):
       os.mkdir(newPath)
     return True
 
+def path2components(path, maxDepth = 4096):
+  """split a path to a list of components"""
+  depth = 0
+  components = []
+  head, tail = os.path.split(path)
+  while depth < maxDepth:
+    if tail == "":
+      break
+    components.append(tail) # we from bottom up
+    head, tail = os.path.split(head)
+    # limit the depth to some high value, just to be sure
+    # not to get stuck in this recursive loop
+    depth+=1
+  components.reverse() # revert back to the real order
+  return components
 
-# based on http://stackoverflow.com/a/1551394
+  # based on http://stackoverflow.com/a/1551394
 def prettyTimeDiff(dtSeconds):
   """
   Get a datetime object or a int() Epoch timestamp and return a
