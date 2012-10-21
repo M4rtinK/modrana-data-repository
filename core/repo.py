@@ -31,7 +31,7 @@ PACKAGING_QUEUE_SIZE = QUEUE_SIZE
 PACKAGING_POOL_SIZE = CPU_COUNT
 PUBLISHING_QUEUE_SIZE = QUEUE_SIZE
 # keywords
-SHUTDOWN_KEYWORD = "shutdown"
+SHUTDOWN_SIGNAL = "shutdown"
 # folders
 TEMP_PATH = "temp"
 RESULTS_PATH = "results"
@@ -41,15 +41,16 @@ class Repository(object):
   def __init__(self, manager):
     self.manager = manager
 
-    # is fed by the data loader
-    self.sourceQueue = mp.Queue(SOURCE_DATA_QUEUE_SIZE)
-    # the processing pool consumes from the source queue
-    self.processingPool = mp.Pool(CPU_COUNT)
-    self.packagingQueue = mp.Queue(PACKAGING_QUEUE_SIZE)
-    self.packagingPool = mp.Pool(CPU_COUNT)
-    self.publishQueue = mp.Queue(PUBLISHING_QUEUE_SIZE)
+    # the source queue is fed by the data loader
+    self.sourceQueue = mp.JoinableQueue(SOURCE_DATA_QUEUE_SIZE)
+    # the packaging queue is fed by the processing processes
+    self.packagingQueue = mp.JoinableQueue(PACKAGING_QUEUE_SIZE)
+    # the publishing queue is fed by the packaging processes
+    self.publishQueue = mp.JoinableQueue(PUBLISHING_QUEUE_SIZE)
 
+    # loads data for processing
     self.loadingProcess = None
+    # publishes packages to online repository
     self.publishingProcess = None
 
   def getName(self):
@@ -70,12 +71,12 @@ class Repository(object):
     self.loadingProcess.daemon = True
     self.loadingProcess.start()
     # start the processing processes
-    for i in range(PROCESSING_POOL_SIZE):
+    for i in range(self.getProcessingPoolSize()):
       p = mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
       p.daemon = True
       p.start()
     # start the packaging processes
-    for i in range(PROCESSING_POOL_SIZE):
+    for i in range(self.getPackagingPoolSize()):
       p = mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
       p.daemon = True
       p.start()
@@ -83,15 +84,55 @@ class Repository(object):
     self.publishingProcess = mp.Process(target=self._publishPackage, args=(self.publishQueue,),)
     self.publishingProcess.daemon = True
     self.publishingProcess.start()
-    self.publishingProcess.join()
-    # as the publishing process is the last one to handle work related to the update,
-    # we join it to wait for the repository update to finish
+
+    # start a method that first joins the first process, once it stops it joins
+    # all the queues in sequence and feeds them with shutdown commands corresponding to the number of
+    # worker processes corresponding to the given Queue
+    # -> this shut shut-down the whole operation in sequence on the individual stages dry up
+    self._terminateOnceDone()
 
     # run post-update
     if self._postUpdate() == False:
       print('repository post-update failed')
       return False
     return True
+
+  def _terminateOnceDone(self):
+    """terminate processes through their input queue
+    once the previous stage runs out of work"""
+    # first wait fo the loader to finish
+    self.loadingProcess.join()
+
+    # then shut down all the stages in sequence as they run out of work
+    stages = [
+      (self.sourceQueue, self.getProcessingPoolSize()),
+      (self.packagingQueue, self.getPackagingPoolSize()),
+      (self.publishQueue, 1)
+    ]
+
+    for queue, processCount in stages:
+      # join the queue and wait for any work units to be finished
+      queue.join()
+      # now send to shutdown commands to the processes feeding from the queue
+      for i in range(processCount):
+        queue.put(SHUTDOWN_SIGNAL)
+      # wait for the shutdown signals to be processed
+      queue.join()
+
+
+
+
+  def getProcessingPoolSize(self):
+    """returns the number of threads to start in the data processing pool
+    NOTE: this number should not change once the processing threads are started,
+    as it might prevent a clean shutdown"""
+    return PROCESSING_POOL_SIZE
+
+  def getPackagingPoolSize(self):
+    """returns the number of threads to start in the data packaging pool
+    NOTE: this number should not change once the packaging threads are started,
+    as it might prevent a clean shutdown"""
+    return PACKAGING_POOL_SIZE
 
   def _preUpdate(self):
     """this method is called before starting the repository update"""
@@ -100,7 +141,6 @@ class Repository(object):
   def _postUpdate(self):
     """this method is called after finishing the repository update """
     pass
-
 
   ## Multiprocessing tasks ##
   def _loadData(self, sourceQueue):

@@ -87,10 +87,13 @@ class MonavRepository(Repository):
     """process OSM data in the PBF format into Monav routing data"""
     while True:
       package = sourceQueue.get()
-      if package == repo.SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_SIGNAL:
+        sourceQueue.task_done()
         break
       # process the data
       package.process()
+      # signal task done
+      sourceQueue.task_done()
       # forward the package to the packaging pool
       packQueue.put(package)
     print('monav processing: shutting down')
@@ -101,10 +104,13 @@ class MonavRepository(Repository):
     sequentially to three separate archives"""
     while True:
       package = packQueue.get()
-      if package == repo.SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_SIGNAL:
+        packQueue.task_done()
         break
       # packaging
       package.package()
+      # signal task done
+      packQueue.task_done()
       # forward the package to the publishing process
       publishQueue.put(package)
     print('monav packaging: shutting down')
@@ -115,10 +121,12 @@ class MonavRepository(Repository):
     print('monav publisher: starting')
     while True:
       package = publishQueue.get()
-      if package == repo.SHUTDOWN_KEYWORD:
+      if package == repo.SHUTDOWN_SIGNAL:
+        publishQueue.task_done()
         break
       print('publishing %s' % package.getName())
       package.publish(self.getPublishPath())
+      publishQueue.task_done()
     print('monav publisher: shutting down')
 
 class MonavPackage(Package):
