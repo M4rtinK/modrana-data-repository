@@ -19,6 +19,7 @@
 #---------------------------------------------------------------------------
 import shutil
 import subprocess
+import urllib
 import urllib2
 import csv
 import os
@@ -164,10 +165,11 @@ class MonavPackage(Package):
           print('removing old folder %s' % self.tempStoragePath)
           shutil.rmtree(self.tempStoragePath)
         utils.createFolderPath(self.tempStoragePath)
-        f = open(self.sourceDataPath, "w")
-        request = urllib2.urlopen(self.url)
-        f.write(request.read())
-        f.close()
+#        f = open(self.sourceDataPath, "w")
+#        request = urllib2.urlopen(self.url)
+        urllib.urlretrieve(self.url, self.sourceDataPath)
+#        f.write(request.read())
+#        f.close()
         return True
     except Exception, e:
       message = 'monav package: OSM PBF download failed\n'
