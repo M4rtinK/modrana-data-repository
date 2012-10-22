@@ -27,14 +27,6 @@ from monav import MonavRepository
 from core.configobj.configobj import ConfigObj
 from core import utils
 
-# pool & queue sizes
-CPU_COUNT = mp.cpu_count()
-QUEUE_SIZE = CPU_COUNT*2
-SOURCE_DATA_QUEUE_SIZE = QUEUE_SIZE
-PROCESSING_POOL_SIZE = CPU_COUNT
-PACKAGING_QUEUE_SIZE = QUEUE_SIZE
-PACKAGING_POOL_SIZE = CPU_COUNT
-PUBLISHING_QUEUE_SIZE = QUEUE_SIZE
 # keywords
 SHUTDOWN_KEYWORD = "shutdown"
 # folders
