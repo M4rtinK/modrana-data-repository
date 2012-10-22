@@ -24,7 +24,7 @@ import os
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()
-QUEUE_SIZE = CPU_COUNT*2
+QUEUE_SIZE = 10 # TODO: make this configurable
 SOURCE_DATA_QUEUE_SIZE = QUEUE_SIZE
 PROCESSING_POOL_SIZE = CPU_COUNT
 PACKAGING_QUEUE_SIZE = QUEUE_SIZE

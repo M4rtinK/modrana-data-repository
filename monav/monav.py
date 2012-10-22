@@ -109,7 +109,16 @@ class MonavRepository(Repository):
         sourceQueue.task_done()
         break
       # process the data
-      package.process()
+
+      # rough Monav-preprocessor thread count heuristics
+      # * the packages will probably spend the most time
+      # importing data, but many threads can speed up part of
+      # the computation quite a bit
+      # * with the default queue size (10), this means worst-case
+      # over-commit of about 2.5 for Monav threads (+ max 10 active packaging threads)
+      packageThreads = max(1, int(repo.CPU_COUNT/4))
+
+      package.process(packageThreads)
       # signal task done
       sourceQueue.task_done()
       # forward the package to the packaging pool
