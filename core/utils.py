@@ -21,12 +21,15 @@ import csv
 
 import os
 import tarfile
+import traceback
 import urllib2
 import urlparse
 import zipfile
 import datetime
 
 # URL types
+import sys
+
 URL_GEOFABRIK = 1
 
 def tarDir(path, tarFilename, fakeRoot=None):
@@ -116,7 +119,7 @@ def url2repoPathFilenameName(url, urlType):
       cutIndex = 1
     components = components[cutIndex:]
     if components:
-      repoSubPath = os.path.join(components)
+      repoSubPath = os.path.join(*components)
     else:
       repoSubPath = ""
 #  if urlType == URL_GEOFABRIK:
@@ -216,16 +219,19 @@ def sortUrlsBySize(urls):
   for url in urls:
     try:
       response = urllib2.urlopen(url)
-      if ['content-length'] in response.info():
-        byteSize = int(response.info()['content-length'])
+      byteSize = response.info().get('content-length', None)
+      if byteSize is None:
+        unknownSizeUrls.append((None, url))
+      else:
+        byteSize = int(byteSize)
+        # byte size is returned as a string from the header
         sortedUrls.append((byteSize, url))
         totalSize+=byteSize
-      else:
-        unknownSizeUrls.append((None, url))
     except Exception, e:
       print('size estimation failed for url:')
       print(url)
       print(e)
+      traceback.print_exc(file=sys.stdout)
   # sort the list
   sortedUrls.sort()
   print('%d urls sorted by size' % len(sortedUrls))
