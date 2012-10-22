@@ -198,9 +198,9 @@ class MonavPackage(Package):
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
 
       # convert the arguments to whitespace delimited strings and run them
-      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=False)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=False)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=False, stderr=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=False, stderr=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=False, stderr=False)
       return True
     except Exception, e:
       message = 'monav package: Monav routing data processing failed\n'
