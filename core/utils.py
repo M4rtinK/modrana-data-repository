@@ -21,6 +21,7 @@ import csv
 
 import os
 import tarfile
+import urllib2
 import urlparse
 import zipfile
 import datetime
@@ -168,6 +169,26 @@ def prettyTimeDiff(dtSeconds):
     return str(day_diff/30) + " months"
   return str(day_diff/365) + " years"
 
+# from:
+# http://www.5dollarwhitebox.org/drupal/node/84
+def bytes2PrettyUnitString(bytes):
+  bytes = float(bytes)
+  if bytes >= 1099511627776:
+    terabytes = bytes / 1099511627776
+    size = '%.2fTB' % terabytes
+  elif bytes >= 1073741824:
+    gigabytes = bytes / 1073741824
+    size = '%.2fGB' % gigabytes
+  elif bytes >= 1048576:
+    megabytes = bytes / 1048576
+    size = '%.2fMB' % megabytes
+  elif bytes >= 1024:
+    kilobytes = bytes / 1024
+    size = '%.2fKB' % kilobytes
+  else:
+    size = '%.2fb' % bytes
+  return size
+
 def countCSVLines(path, minColumns=1):
   """count all eligible lines in the given CSV file
   NOTE: this just iterates over the file so it should handle really
@@ -181,3 +202,34 @@ def countCSVLines(path, minColumns=1):
   f.close()
   return lineCount
 
+def sortUrlsBySize(urls):
+  """sort URLs by their size,
+  return a list of (size, url) tuples and the complete size in bytes
+  * if opening URL fails, skip it in the result
+  * if size is unknown (no 'content-length' in header), store a (None, url) tuple
+  to the unknownSizeUrls list
+  * the sortedUrls list is extended with the unknownSizeUrls before it is returned
+  """
+  sortedUrls = []
+  unknownSizeUrls = []
+  totalSize = 0
+  for url in urls:
+    try:
+      response = urllib2.urlopen(url)
+      if ['content-length'] in response.info():
+        byteSize = int(response.info()['content-length'])
+        sortedUrls.append((byteSize, url))
+        totalSize+=byteSize
+      else:
+        unknownSizeUrls.append((None, url))
+    except Exception, e:
+      print('size estimation failed for url:')
+      print(url)
+      print(e)
+  # sort the list
+  sortedUrls.sort()
+  print('%d urls sorted by size' % len(sortedUrls))
+  print('%d with unknown size' % len(unknownSizeUrls))
+  print('%d failed urls' % (len(urls) - len(sortedUrls) + len(unknownSizeUrls)))
+  sortedUrls.extend(unknownSizeUrls)
+  return sortedUrls, totalSize
