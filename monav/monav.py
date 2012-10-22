@@ -65,28 +65,43 @@ class MonavRepository(Repository):
     f = open(csvFilePath, "r")
     reader = csv.reader(f)
     print('monav loader: starting')
-    packId = 0
+    # read all URLs to a list
+    urls = []
     for row in reader:
       if len(row) > 0:
-        url = row[0]
-        try:
-          metadata = {
-            'packId' : packId,
-            'tempPath' : tempPath,
-            'helperPath' : self.getFolderName(),
-            'preprocessorPath' : self.preprocessorPath,
-            'urlType' : self._getSourceUrlType()
-          }
-          pack = MonavPackage(url, metadata)
-          packId+=1
-          print('monav loader: downloading %d/%d: %s ' % (packId, urlCount, pack.getName()))
-          pack.load()
-          sourceQueue.put(pack)
-        except Exception, e:
-          print('monav loader: loading url failed: %s' % url)
-          print(e)
-          traceback.print_exc(file=sys.stdout)
+        urls.append(row[0])
     f.close()
+
+    # sort the URLs by size
+    print('monav loader: sorting URLs by size in ascending order')
+    sortedUrls, totalSize = utils.sortUrlsBySize(urls)
+    print('monav loader: total download size: %s' % utils.bytes2PrettyUnitString(totalSize))
+
+    # download all the URLs
+    packId = 0
+    for size, url in sortedUrls:
+      print "ASDASDASDASDASD"
+      print size
+      print url
+      try:
+        metadata = {
+          'packId' : packId,
+          'tempPath' : tempPath,
+          'helperPath' : self.getFolderName(),
+          'preprocessorPath' : self.preprocessorPath,
+          'urlType' : self._getSourceUrlType()
+        }
+        pack = MonavPackage(url, metadata)
+        packId+=1
+        sizeString = utils.bytes2PrettyUnitString(size)
+        print('monav loader: downloading %d/%d: %s (%s)' % (packId, urlCount, pack.getName(),sizeString))
+        pack.load()
+        sourceQueue.put(pack)
+      except Exception, e:
+        print('monav loader: loading url failed: %s' % url)
+        print(e)
+        traceback.print_exc(file=sys.stdout)
+
     print('monav loader: all downloads finished')
 
   def _processPackage(self, sourceQueue, packQueue):

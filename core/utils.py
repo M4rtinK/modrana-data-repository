@@ -103,7 +103,6 @@ def url2repoPathFilenameName(url, urlType):
   wholePath = urlparse.urlparse(url)[2]
   rawRepoPath, filename = os.path.split(wholePath)
   name = filename.split('.')[0]
-
   geofabrikPrefix = "http://download.geofabrik.de/openstreetmap/"
   if url.startswith(geofabrikPrefix):
     # we are currently using the Geofabrik URLs with the openstreetmap prefix
