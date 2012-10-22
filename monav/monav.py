@@ -80,9 +80,6 @@ class MonavRepository(Repository):
     # download all the URLs
     packId = 0
     for size, url in sortedUrls:
-      print "ASDASDASDASDASD"
-      print size
-      print url
       try:
         metadata = {
           'packId' : packId,
