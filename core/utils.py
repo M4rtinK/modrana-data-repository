@@ -99,7 +99,9 @@ def url2repoPathFilenameName(url, urlType):
   wholePath = urlparse.urlparse(url)[2]
   rawRepoPath, filename = os.path.split(wholePath)
   name = filename.split('.')[0]
-  if urlType == URL_GEOFABRIK:
+
+  geofabrikPrefix = "http://download.geofabrik.de/openstreetmap/"
+  if url.startswith(geofabrikPrefix):
     # we are currently using the Geofabrik URLs with the openstreetmap prefix
     # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
     # normalize the path to get rid of doubled separators, etc.
@@ -111,7 +113,24 @@ def url2repoPathFilenameName(url, urlType):
       cutIndex = 2
     else:
       cutIndex = 1
-    repoSubPath = os.path.join(*components[cutIndex:])
+    components = components[cutIndex:]
+    if components:
+      repoSubPath = os.path.join(components)
+    else:
+      repoSubPath = ""
+#  if urlType == URL_GEOFABRIK:
+#    # we are currently using the Geofabrik URLs with the openstreetmap prefix
+#    # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
+#    # normalize the path to get rid of doubled separators, etc.
+#    rawRepoPath = os.path.normpath(rawRepoPath)
+#    # split it to a list of components
+#    components = path2components(rawRepoPath)
+#    # ignore leading path separator
+#    if components[0] in (os.pathsep, os.altsep):
+#      cutIndex = 2
+#    else:
+#      cutIndex = 1
+#    repoSubPath = os.path.join(*components[cutIndex:])
   else:
     repoSubPath = rawRepoPath
   # add the package name to the repoSub path
