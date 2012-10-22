@@ -89,12 +89,9 @@ class Package(object):
     """
     pass
 
-  def clearSource(self):
-    """remove any source data for this package"""
-    pass
-
-  def clearResults(self):
-    """remove any result data for this package"""
-    pass
+  def clearAll(self):
+    """clear all data created during package processing
+    -> this currently means source & temporary data,
+    not results, if they were already published"""
 
 

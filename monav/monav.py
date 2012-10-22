@@ -239,7 +239,7 @@ class MonavPackage(Package):
     else:
       return False
 
-  def publish(self, mainRepoPath, cleanup=False):
+  def publish(self, mainRepoPath, cleanup=True):
     """publish the package to the online repository"""
     for path2file in self.results:
       finalRepoPath = os.path.join(mainRepoPath, self.repoSubPath)
@@ -255,5 +255,8 @@ class MonavPackage(Package):
         print(message)
         print(e)
     if cleanup: # clean up any source & temporary files
-      self.clearSource()
-      self.clearResults()
+      self.clearAll()
+
+  def clearAll(self):
+    """remove the whole temporary directory for this pack"""
+    shutil.rmtree(self.tempPath)
