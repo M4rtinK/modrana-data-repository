@@ -90,7 +90,10 @@ class MonavRepository(Repository):
         }
         pack = MonavPackage(url, metadata)
         packId+=1
-        sizeString = utils.bytes2PrettyUnitString(size)
+        if size is None:
+          sizeString = "unknown size"
+        else:
+          sizeString = utils.bytes2PrettyUnitString(size)
         print('monav loader: downloading %d/%d: %s (%s)' % (packId, urlCount, pack.getName(),sizeString))
         pack.load()
         sourceQueue.put(pack)
