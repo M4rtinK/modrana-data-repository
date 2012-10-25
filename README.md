@@ -3,8 +3,8 @@ modRana data repository
 
 ModRana data repository serves data to users running modRana in the field.
 
-This is basically the server side, the cleint side will be part of modRana itself.
-Of course, nothing prohibits other applications being used as cleints, provided they implement the necessary protocol (basically just parsing the repository manifest files).
+This is basically the server side, the client side will be part of modRana itself.
+Of course, nothing prohibits other applications being used as clients, provided they implement the necessary protocol (basically just parsing the repository manifest files).
 
 Monav routing data
 ----------
