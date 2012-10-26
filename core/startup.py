@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
 import sys
-import time
 
 from core.repo import QUEUE_SIZE
 
@@ -33,7 +32,7 @@ class Startup:
     parser.add_argument(
       '-c', metavar="configuration file", type=str,
       help="load the configuration file from this path DEFAULT: repository.conf",
-      default='repository.conf', action="store"
+      default=None, action="store"
     )
 
     # Folders
@@ -41,13 +40,13 @@ class Startup:
     parser.add_argument(
       '--temp-folder', metavar="temporary folder", type=str,
       help='path to the temporary data folder',
-      default='temp',
+      default=None,
       action="store"
     )
     parser.add_argument(
       '--repository-folder', metavar='repository folder', type=str,
       help='path to the repository folder',
-      default='results',
+      default=None,
       action="store"
     )
 
