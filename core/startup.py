@@ -59,8 +59,14 @@ class Startup:
       action="store"
     )
     parser.add_argument(
+      '--queue-size', metavar='package count', type=int,
+      help='override default queue size DEFAULT: %d' % QUEUE_SIZE,
+      default=None,
+      action="store"
+    )
+    parser.add_argument(
       '--source-queue-size', metavar='package count', type=int,
-      help='set the source data queue size DEFAULT: %d' % QUEUE_SIZE,
+      help='set the source data queue size DEFAULT: 10' % QUEUE_SIZE,
       default=None,
       action="store"
     )
