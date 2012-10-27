@@ -104,7 +104,7 @@ class Startup:
       action="store"
     )
     parser.add_argument(
-      '--monav-preprocessor-path', metavar='monav-preprocessor binary', type=int,
+      '--monav-preprocessor-path', metavar='monav-preprocessor binary', type=str,
       help='path to the Monav preprocessor binary',
       default=None,
       action="store"
