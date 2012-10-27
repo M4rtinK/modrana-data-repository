@@ -66,7 +66,7 @@ class Startup:
     )
     parser.add_argument(
       '--source-queue-size', metavar='package count', type=int,
-      help='set the source data queue size DEFAULT: 10' % QUEUE_SIZE,
+      help='set the source data queue size DEFAULT: %d' % QUEUE_SIZE,
       default=None,
       action="store"
     )
@@ -122,7 +122,7 @@ class Startup:
       action="store"
     )
     parser.add_argument(
-      '--monav-csv-path', metavar='CSV file', type=int,
+      '--monav-csv-path', metavar='CSV file', type=str,
       help="CSV file with links to PBF extracts, used as a basis for Monav routing data packages DEFAULT: monav/osm_pbf_extracts.csv",
       default=None,
       action="store"
