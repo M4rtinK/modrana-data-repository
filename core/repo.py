@@ -155,8 +155,8 @@ class Repository(object):
   def _publishPackage(self, publishQueue):
     pass
 
-
   ## Paths ##
+
   def getTempPath(self):
     return os.path.join(
       self.manager.getTempPath(),
