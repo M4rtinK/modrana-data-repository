@@ -23,7 +23,7 @@ import multiprocessing as mp
 import os
 import time
 
-from monav import MonavRepository, PREPROCESSOR_PATH
+from monav import MonavRepository, PREPROCESSOR_PATH, SOURCE_DATA_URLS_CSV
 from core.configobj.configobj import ConfigObj
 from core import repo
 from core import utils
@@ -135,6 +135,10 @@ class Manager(object):
     """Monav preprocessor parallel run threshold wrapper
     -> don't run monav preprocessors in parallel is source data is larger than threshold"""
     self._wrapVariable(self.args.monav_parallel_threshold, "monav_parallel_threshold", None)
+
+  def getMonavCSVPath(self):
+    """path to a CSV file with links to PBF extracts for Monav wrapper"""
+    self._wrapVariable(self.args.monav_csv_path, "monav_csv_path", SOURCE_DATA_URLS_CSV)
 
   def _wrapVariable(self, option, confKey, default):
     if option is not None:

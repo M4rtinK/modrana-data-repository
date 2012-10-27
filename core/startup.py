@@ -121,6 +121,12 @@ class Startup:
       default=None,
       action="store"
     )
+    parser.add_argument(
+      '--monav-csv-path', metavar='CSV file', type=int,
+      help="CSV file with links to PBF extracts, used as a basis for Monav routing data packages DEFAULT: monav/osm_pbf_extracts.csv",
+      default=None,
+      action="store"
+    )
 
     self.args = parser.parse_args()
 

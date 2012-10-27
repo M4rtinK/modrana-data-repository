@@ -31,7 +31,7 @@ from core.repo import Repository
 import core.repo as repo
 import core.utils as utils
 
-SOURCE_DATA_URLS_CSV = "osm_pbf_extracts.csv"
+SOURCE_DATA_URLS_CSV = "monav/osm_pbf_extracts.csv"
 
 PREPROCESSOR_PATH = "monav-preprocessor"
 
@@ -57,7 +57,7 @@ class MonavRepository(Repository):
 
   def _loadData(self, sourceQueue):
     tempPath = self.getTempPath()
-    csvFilePath = os.path.join(self.getFolderName(), SOURCE_DATA_URLS_CSV)
+    csvFilePath = self.manager.getMonavCSVPath()
     # get a CSV line count to get approximate repository update progress
     urlCount = utils.countCSVLines(csvFilePath)
     if not urlCount: # just to be sure
