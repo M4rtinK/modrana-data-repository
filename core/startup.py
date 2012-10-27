@@ -104,6 +104,12 @@ class Startup:
       action="store"
     )
     parser.add_argument(
+      '--monav-preprocessor-path', metavar='monav-preprocessor binary', type=int,
+      help='path to the Monav preprocessor binary',
+      default=None,
+      action="store"
+    )
+    parser.add_argument(
       '--monav-pool-size', metavar='process count', type=int,
       help='how many monav-preprocessors should be run in parallel per package DEFAULT: 1 MAX: 3 NOTE: this can triple memory usage',
       default=None,

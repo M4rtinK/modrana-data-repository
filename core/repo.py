@@ -24,7 +24,7 @@ import os
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()
-QUEUE_SIZE = 10 # TODO: make this configurable
+QUEUE_SIZE = 10
 SOURCE_DATA_QUEUE_SIZE = QUEUE_SIZE
 PROCESSING_POOL_SIZE = CPU_COUNT
 PACKAGING_QUEUE_SIZE = QUEUE_SIZE
@@ -44,11 +44,11 @@ class Repository(object):
     self.manager = manager
 
     # the source queue is fed by the data loader
-    self.sourceQueue = mp.JoinableQueue(SOURCE_DATA_QUEUE_SIZE)
+    self.sourceQueue = mp.JoinableQueue(manager.getSourceQueueSize())
     # the packaging queue is fed by the processing processes
-    self.packagingQueue = mp.JoinableQueue(PACKAGING_QUEUE_SIZE)
+    self.packagingQueue = mp.JoinableQueue(manager.getPackagingQueueSize())
     # the publishing queue is fed by the packaging processes
-    self.publishQueue = mp.JoinableQueue(PUBLISHING_QUEUE_SIZE)
+    self.publishQueue = mp.JoinableQueue(manager.getPublishQueueSize())
 
     # loads data for processing
     self.loadingProcess = None
@@ -56,6 +56,7 @@ class Repository(object):
     self.publishingProcess = None
 
   def getName(self):
+    """return a pretty name for the repository"""
     pass
 
   def getFolderName(self):
@@ -125,13 +126,13 @@ class Repository(object):
     """returns the number of threads to start in the data processing pool
     NOTE: this number should not change once the processing threads are started,
     as it might prevent a clean shutdown"""
-    return PROCESSING_POOL_SIZE
+    return self.manager.getProcessingPoolSize()
 
   def getPackagingPoolSize(self):
     """returns the number of threads to start in the data packaging pool
     NOTE: this number should not change once the packaging threads are started,
     as it might prevent a clean shutdown"""
-    return PACKAGING_POOL_SIZE
+    return self.manager.getPackagingPoolSize()
 
   def _preUpdate(self):
     """this method is called before starting the repository update"""
@@ -157,10 +158,14 @@ class Repository(object):
 
   ## Paths ##
   def getTempPath(self):
-    return os.path.join(TEMP_PATH, self.getFolderName())
+    return os.path.join(
+      self.manager.getTempPath(),
+      self.getFolderName())
 
   def getPublishPath(self):
-    return os.path.join(RESULTS_PATH, self.getFolderName())
+    return os.path.join(
+      self.manager.getRepoPath(),
+      self.getFolderName())
 
   ## Source data URLs ##
   def _getSourceUrlType(self):
