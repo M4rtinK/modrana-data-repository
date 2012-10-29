@@ -245,7 +245,7 @@ class MonavPackage(Package):
         # if threshold is crossed, don't run preprocessors in parallel
         maxParallelPreprocessors = 1
     try:
-      if parallelThreshold is None:
+      if parallelThreshold is None and maxParallelPreprocessors == 1:
         print('processing %s' % self.getName())
       elif maxParallelPreprocessors == 1:
         print('processing %s in 1 thread (threshold reached)' % self.getName())
