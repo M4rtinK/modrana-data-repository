@@ -241,14 +241,16 @@ class MonavPackage(Package):
       except OSError:
         fileSize = 0
       # check if file size in MB is larger than threshold
-      if (fileSize/1000) > parallelThreshold:
+      if (fileSize/(2**20)) > parallelThreshold:
         # if threshold is crossed, don't run preprocessors in parallel
         maxParallelPreprocessors = 1
     try:
-      if maxParallelPreprocessors:
-        print('processing %s in %d threads' % (self.getName(), maxParallelPreprocessors))
-      else:
+      if parallelThreshold is None:
         print('processing %s' % self.getName())
+      elif maxParallelPreprocessors == 1:
+        print('processing %s in 1 thread (threshold reached)' % self.getName())
+      else: # >1
+        print('processing %s in %d threads' % (self.getName(), maxParallelPreprocessors))
       inputFile = self.sourceDataPath
       outputFolder = self.tempStoragePath
       baseINIPath = os.path.join(self.helperPath, "base.ini")
@@ -266,32 +268,16 @@ class MonavPackage(Package):
 
         return args, resultPath, self.tempStoragePath
 
-#      # first pass - import data, create address info & generate car routing data
-#      args1 = ['%s' % preprocessorPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"', '-dd']
-#      # second pass - import data, generate bike routing data
-#      args2 = ['%s' % preprocessorPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"', '-dd']
-#      # third pass - import data, process pedestrian routing data & delete temporary files
-#      args3 = ['%s' % preprocessorPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
-
       tasks = [
         getTask("car", "motorcar", 0),
         getTask("bike", "bicycle", 1),
         getTask("pedestrian", "foot", 2)
       ]
 
-      # run preprocessors in parallel
-      pool = mp.Pool(processes=maxParallelPreprocessors) #
+      # run preprocessors in parallel (depending on current settings)
+      pool = mp.Pool(processes=maxParallelPreprocessors)
       pool.map(runPreprocessor, tasks)
 
-      # convert the arguments to whitespace delimited strings and run them
-#      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=fNull, stderr=fNull)
-#      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=fNull, stderr=fNull)
-#      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=fNull, stderr=fNull)
-      # cleanup
-      # done
       return True
     except Exception, e:
       message = 'monav package: Monav routing data processing failed\n'
