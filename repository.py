@@ -35,13 +35,27 @@ TEMP_PATH = "temp"
 RESULTS_PATH = "results"
 CONFIG_FILE_PATH = "repository.conf"
 
+
+# decorators
+def integer(fn):
+  def wrapper(self):
+    return int(fn(self))
+  return wrapper
+
+def string(fn):
+  def wrapper(self):
+    return str(fn(self))
+  return wrapper
+
+
+
 class Manager(object):
   """manages the overall repository state, including updating all
   sub-repositories"""
   def __init__(self):
     # load the configuration file
-    self.conf = ConfigObj(self.getConfigPath())
     self.args = startup.Startup().getArgs()
+    self.conf = ConfigObj(self.getConfigPath())
 
     # for now, update all repositories
     self.updateAll()
@@ -49,6 +63,7 @@ class Manager(object):
   def updateAll(self):
 
     print("## starting repository update ##")
+    print ((self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
     print("# CPU count: %d, proc. pool: %d, pack pool: %d" % (self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
     print("# queues: source: %d, pack: %d, publish: %d" % (self.getSourceQueueSize(), self.getPackagingQueueSize(), self.getPublishQueueSize()))
 
@@ -93,51 +108,62 @@ class Manager(object):
     """repository folder path wrapper"""
     return self._wrapVariable(self.args.repository_folder, "repository_folder", repo.RESULTS_PATH)
 
+  @integer
   def getCpuCount(self):
     """cpu count wrapper"""
     return self._wrapVariable(self.args.cpu_count, "cpu_count", mp.cpu_count())
 
+  @integer
   def getSourceQueueSize(self):
     """source queue size wrapper"""
     return self._wrapVariable(self.args.source_queue_size, "source_queue_size", repo.QUEUE_SIZE)
 
+  @integer
   def getPackagingQueueSize(self):
     """packaging queue size wrapper"""
     return self._wrapVariable(self.args.packaging_queue_size, "packaging_queue_size", repo.QUEUE_SIZE)
 
+  @integer
   def getPublishQueueSize(self):
     """publishing queue size wrapper"""
     return self._wrapVariable(self.args.publish_queue_size, "publish_queue_size", repo.QUEUE_SIZE)
 
+  @integer
   def getProcessingPoolSize(self):
     """processing pool size wrapper"""
     return self._wrapVariable(self.args.processing_pool_size, "processing_pool_size", repo.QUEUE_SIZE)
 
+  @integer
   def getPackagingPoolSize(self):
     """packaging pool size wrapper"""
     return self._wrapVariable(self.args.packaging_pool_size, "packaging_pool_size", repo.QUEUE_SIZE)
 
   # Monav variable wrappers
 
+  @string
   def getMonavPreprocessorPath(self):
     """Monav preprocessor path wrapper"""
     return self._wrapVariable(self.args.monav_preprocessor_path, "monav_preprocessor_path", PREPROCESSOR_PATH)
 
+  @integer
   def getMonavPreprocessorThreads(self):
     """Monav preprocessor thread count wrapper"""
     cpuCount = int(self.getCpuCount())
     return self._wrapVariable(self.args.monav_preprocessor_threads, "monav_preprocessor_threads", max(1, cpuCount/4))
 
+  @integer
   def getMonavParallelThreads(self):
     """Monav preprocessor parallel thread count wrapper
     -> how many preprocessors would be run in parallel"""
     return self._wrapVariable(self.args.monav_parallel_threads, "monav_parallel_threads", 1)
 
+  @integer
   def getMonavParallelThreshold(self):
     """Monav preprocessor parallel run threshold wrapper
     -> don't run monav preprocessors in parallel is source data is larger than threshold"""
     return self._wrapVariable(self.args.monav_parallel_threshold, "monav_parallel_threshold", None)
 
+  @string
   def getMonavCSVPath(self):
     """path to a CSV file with links to PBF extracts for Monav wrapper"""
     return self._wrapVariable(self.args.monav_csv_path, "monav_csv_path", SOURCE_DATA_URLS_CSV)
@@ -147,6 +173,7 @@ class Manager(object):
       return option
     else:
       return self.conf.get(confKey, default)
+
 
 if __name__ =='__main__':
   Manager()
