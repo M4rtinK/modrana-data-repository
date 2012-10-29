@@ -49,8 +49,11 @@ class Manager(object):
   def updateAll(self):
 
     print("## starting repository update ##")
+    print("# CPU count: %d, proc. pool: %d, pack pool: %d" % (self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
+    print("# queues: source: %d, pack: %d, publish: %d" % (self.getSourceQueueSize(), self.getPackagingQueueSize(), self.getPublishQueueSize()))
 
     print("## updating Monav repository" )
+    print('# monav preprocessor threads: %d' % self.getMonavPreprocessorThreads())
     start = time.time()
     monav = MonavRepository(self)
     monav.update()
