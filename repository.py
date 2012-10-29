@@ -40,7 +40,7 @@ class Manager(object):
   sub-repositories"""
   def __init__(self):
     # load the configuration file
-    self.conf = ConfigObj(CONFIG_FILE_PATH)
+    self.conf = ConfigObj(self.getConfigPath())
     self.args = startup.Startup().getArgs()
 
     # for now, update all repositories
