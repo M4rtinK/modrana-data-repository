@@ -131,12 +131,12 @@ class Manager(object):
   @integer
   def getProcessingPoolSize(self):
     """processing pool size wrapper"""
-    return self._wrapVariable(self.args.processing_pool_size, "processing_pool_size", repo.QUEUE_SIZE)
+    return self._wrapVariable(self.args.processing_pool_size, "processing_pool_size", mp.cpu_count())
 
   @integer
   def getPackagingPoolSize(self):
     """packaging pool size wrapper"""
-    return self._wrapVariable(self.args.packaging_pool_size, "packaging_pool_size", repo.QUEUE_SIZE)
+    return self._wrapVariable(self.args.packaging_pool_size, "packaging_pool_size", mp.cpu_count())
 
   # Monav variable wrappers
 
