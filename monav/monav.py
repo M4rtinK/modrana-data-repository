@@ -162,29 +162,6 @@ class MonavRepository(Repository):
       publishQueue.task_done()
     print('monav publisher: shutting down')
 
-
-
-# Due to pool.map() limitations,
-# this function is outside the MonavPackage class
-
-def runPreprocessor(task):
-  """this function is run in an internal pool inside the Monav package"""
-  args, fromPath, toPath = task
-
-  # create the independent per-preprocessor path
-  os.makedirs(fromPath)
-
-  # open /dev/null so that the stdout & stderr output for the command can be dumped into it
-  fNull = open(os.devnull, "w")
-  # call the preprocessor
-  subprocess.call(reduce(lambda x, y: x + " " + y, args), shell=True, stdout=fNull, stderr=fNull)
-  # move the results to the main folder
-  shutil.move(fromPath, toPath)
-  # cleanup
-  fNull.close()
-
-
-
 class MonavPackage(Package):
   def __init__(self, url, metadata):
     Package.__init__(self)
@@ -268,21 +245,59 @@ class MonavPackage(Package):
 
         return args, resultPath, self.tempStoragePath
 
+      def runPreprocessor(queue):
+        """this function is run in an internal pool inside the Monav package"""
+
+        while True:
+          task = queue.get()
+          if task == repo.SHUTDOWN_SIGNAL:
+            queue.task_done()
+            return
+          args, fromPath, toPath = task
+
+          print fromPath
+
+          # create the independent per-preprocessor path
+          os.makedirs(fromPath)
+
+          # open /dev/null so that the stdout & stderr output for the command can be dumped into it
+          fNull = open(os.devnull, "w")
+          # call the preprocessor
+          subprocess.call(reduce(lambda x, y: x + " " + y, args), shell=True, stdout=fNull, stderr=fNull)
+          # move the results to the main folder
+          shutil.move(fromPath, toPath)
+          # cleanup
+          fNull.close()
+          queue.task_done()
+
       tasks = [
         getTask("car", "motorcar", 0),
         getTask("bike", "bicycle", 1),
         getTask("pedestrian", "foot", 2)
       ]
 
+      preprocQueue = mp.JoinableQueue()
+      for i in range(maxParallelPreprocessors):
+        p = mp.Process(target=runPreprocessor, args=(preprocQueue,))
+        p.daemon = True
+        p.start()
+      for task in tasks:
+        preprocQueue.put(task)
+      # wait for the processes to finish
+      preprocQueue.join()
+      # shutdown them down
+      for i in range(maxParallelPreprocessors):
+        preprocQueue.put(repo.SHUTDOWN_SIGNAL)
+      preprocQueue.join()
       # run preprocessors in parallel (depending on current settings)
-      pool = mp.Pool(processes=maxParallelPreprocessors)
-      pool.map(runPreprocessor, tasks)
+#      pool = mp.Pool(processes=maxParallelPreprocessors)
+#      pool.map(runPreprocessor, tasks)
       # closing the pool is important, otherwise the workers in the poll will
       # not exit - after a while the inactive threads will accumulate and
       # no more new ones can be started
-      pool.close()
+#      pool.close()
       # just to be sure
-      pool.join()
+#      pool.join()
 
       return True
     except Exception, e:
