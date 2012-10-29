@@ -209,16 +209,16 @@ class MonavPackage(Package):
       inputFile = self.sourceDataPath
       outputFolder = self.tempStoragePath
       baseINIPath = os.path.join(self.helperPath, "base.ini")
-      prepPath = self.preprocessorPath
+      preprocessorPath = self.preprocessorPath
       print('processing %s' % self.getName())
       # first pass - import data, create address info & generate car routing data
-      args1 = ['%s' % prepPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+      args1 = ['%s' % preprocessorPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"']
       # second pass - import data, generate bike routing data
-      args2 = ['%s' % prepPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+      args2 = ['%s' % preprocessorPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"']
       # third pass - import data, process pedestrian routing data & delete temporary files
-      args3 = ['%s' % prepPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+      args3 = ['%s' % preprocessorPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
 
       # open /dev/null so that the stdout & stderr output fo the commands can be dumped into it
