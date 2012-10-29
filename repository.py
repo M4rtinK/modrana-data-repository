@@ -20,7 +20,6 @@
 #---------------------------------------------------------------------------
 
 import multiprocessing as mp
-import os
 import time
 
 from monav import MonavRepository, PREPROCESSOR_PATH, SOURCE_DATA_URLS_CSV

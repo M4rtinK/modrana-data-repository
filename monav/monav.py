@@ -20,7 +20,6 @@
 import shutil
 import subprocess
 import urllib
-import urllib2
 import csv
 import os
 import traceback
