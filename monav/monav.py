@@ -254,9 +254,6 @@ class MonavPackage(Package):
             queue.task_done()
             return
           args, fromPath, toPath = task
-
-          print fromPath
-
           # create the independent per-preprocessor path
           os.makedirs(fromPath)
 
