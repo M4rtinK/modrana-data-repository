@@ -69,6 +69,10 @@ class Manager(object):
 
     print("## updating Monav repository" )
     print('# monav preprocessor threads: %d' % self.getMonavPreprocessorThreads())
+    print('# max parallel pp. per package: %d' % self.getMonavParallelThreads())
+    ppThreshold = self.getMonavParallelThreshold()
+    if ppThreshold:
+      print('# parallel pp. threshold: %d MB' % ppThreshold)
     start = time.time()
     monav = MonavRepository(self)
     monav.update()
