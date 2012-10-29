@@ -221,10 +221,16 @@ class MonavPackage(Package):
       args3 = ['%s' % prepPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
                '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
 
+      # open /dev/null so that the stdout & stderr output fo the commands can be dumped into it
+      fNull = open(os.devnull, "w")
+
       # convert the arguments to whitespace delimited strings and run them
-      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=False, stderr=False)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=False, stderr=False)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=False, stderr=False)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=fNull, stderr=fNull)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=fNull, stderr=fNull)
+      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=fNull, stderr=fNull)
+      # cleanup
+      fNull.close()
+      # done
       return True
     except Exception, e:
       message = 'monav package: Monav routing data processing failed\n'
