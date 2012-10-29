@@ -24,6 +24,7 @@ import csv
 import os
 import traceback
 import sys
+import multiprocessing as mp
 
 from core.package import Package
 from core.repo import Repository
@@ -117,9 +118,13 @@ class MonavRepository(Repository):
       # the computation quite a bit
       # * with the default queue size (10), this means worst-case
       # over-commit of about 2.5 for Monav threads (+ max 10 active packaging threads)
-      packageThreads = max(1, int(repo.CPU_COUNT/4))
-
-      package.process(packageThreads)
+      monavThreads = self.manager.getMonavPreprocessorThreads()
+      # how many preprocessors can be run at once
+      maxParallelPreprocessors = self.manager.getMonavParallelThreads()
+      # source file size threshold (in MB) for running the preprocessors in parallel
+      parallelThreshold = self.manager.getMonavParallelThreshold()
+      # start packaging
+      package.process((monavThreads, maxParallelPreprocessors), parallelThreshold)
       # signal task done
       sourceQueue.task_done()
       # forward the package to the packaging pool
@@ -156,6 +161,29 @@ class MonavRepository(Repository):
       package.publish(self.getPublishPath())
       publishQueue.task_done()
     print('monav publisher: shutting down')
+
+
+
+# Due to pool.map() limitations,
+# this function is outside the MonavPackage class
+
+def runPreprocessor(task):
+  """this function is run in an internal pool inside the Monav package"""
+  args, fromPath, toPath = task
+
+  # create the independent per-preprocessor path
+  os.makedirs(fromPath)
+
+  # open /dev/null so that the stdout & stderr output for the command can be dumped into it
+  fNull = open(os.devnull, "w")
+  # call the preprocessor
+  subprocess.call(reduce(lambda x, y: x + " " + y, args), shell=True, stdout=fNull, stderr=fNull)
+  # move the results to the main folder
+  shutil.move(fromPath, toPath)
+  # cleanup
+  fNull.close()
+
+
 
 class MonavPackage(Package):
   def __init__(self, url, metadata):
@@ -203,33 +231,66 @@ class MonavPackage(Package):
       traceback.print_exc(file=sys.stdout)
       return False
 
-  def process(self, threads=1):
+  def process(self, threads=(1,1), parallelThreshold=None):
     """process the PBF extract into Monav routing data"""
+    monavThreads, maxParallelPreprocessors = threads
+    # check the parallel threshold
+    if parallelThreshold is not None:
+      try:
+        fileSize = os.path.getsize(self.sourceDataPath)
+      except OSError:
+        fileSize = 0
+      # check if file size in MB is larger than threshold
+      if (fileSize/1000) > parallelThreshold:
+        # if threshold is crossed, don't run preprocessors in parallel
+        maxParallelPreprocessors = 1
     try:
+      if maxParallelPreprocessors:
+        print('processing %s in %d threads' % (self.getName(), maxParallelPreprocessors))
+      else:
+        print('processing %s' % self.getName())
       inputFile = self.sourceDataPath
       outputFolder = self.tempStoragePath
       baseINIPath = os.path.join(self.helperPath, "base.ini")
       preprocessorPath = self.preprocessorPath
-      print('processing %s' % self.getName())
-      # first pass - import data, create address info & generate car routing data
-      args1 = ['%s' % preprocessorPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"']
-      # second pass - import data, generate bike routing data
-      args2 = ['%s' % preprocessorPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"']
-      # third pass - import data, process pedestrian routing data & delete temporary files
-      args3 = ['%s' % preprocessorPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
-               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
 
-      # open /dev/null so that the stdout & stderr output fo the commands can be dumped into it
-      fNull = open(os.devnull, "w")
+      def getTask(modeName, modeProfile, index):
+        """prepare task that runs the preprocessor in temPath separate for every preprocessor instance and move
+        the result to resultPath
+        NOTE: the temporary folder is used to avoid multiple preprocessors mixing their temporary data"""
+        tempOutputFolder = os.path.join(outputFolder, str(index))
+        resultPath = os.path.join(tempOutputFolder, "routing_%s" % modeName)
+        # compile arguments
+        args = ['%s' % preprocessorPath, '-di', '-dro="%s"' % modeName, '-t=%d' % monavThreads, '--verbose', '--settings="%s"' % baseINIPath,
+                '--input="%s"' % inputFile, '--output="%s"' % tempOutputFolder, '--name="%s"' % self.name, '--profile="%s"' % modeProfile, '-dd']
+
+        return args, resultPath, self.tempStoragePath
+
+#      # first pass - import data, create address info & generate car routing data
+#      args1 = ['%s' % preprocessorPath, '-di', '-dro="car"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="motorcar"', '-dd']
+#      # second pass - import data, generate bike routing data
+#      args2 = ['%s' % preprocessorPath, '-di', '-dro="bike"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="bicycle"', '-dd']
+#      # third pass - import data, process pedestrian routing data & delete temporary files
+#      args3 = ['%s' % preprocessorPath, '-di', '-dro="pedestrian"', '-t=%d' % threads, '--verbose', '--settings="%s"' % baseINIPath,
+#               '--input="%s"' % inputFile, '--output="%s"' % outputFolder, '--name="%s"' % self.name, '--profile="foot"', '-dd']
+
+      tasks = [
+        getTask("car", "motorcar", 0),
+        getTask("bike", "bicycle", 1),
+        getTask("pedestrian", "foot", 2)
+      ]
+
+      # run preprocessors in parallel
+      pool = mp.Pool(processes=maxParallelPreprocessors) #
+      pool.map(runPreprocessor, tasks)
 
       # convert the arguments to whitespace delimited strings and run them
-      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=fNull, stderr=fNull)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=fNull, stderr=fNull)
-      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=fNull, stderr=fNull)
+#      subprocess.call(reduce(lambda x, y: x + " " + y, args1), shell=True, stdout=fNull, stderr=fNull)
+#      subprocess.call(reduce(lambda x, y: x + " " + y, args2), shell=True, stdout=fNull, stderr=fNull)
+#      subprocess.call(reduce(lambda x, y: x + " " + y, args3), shell=True, stdout=fNull, stderr=fNull)
       # cleanup
-      fNull.close()
       # done
       return True
     except Exception, e:

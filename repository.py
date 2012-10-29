@@ -155,13 +155,16 @@ class Manager(object):
   def getMonavParallelThreads(self):
     """Monav preprocessor parallel thread count wrapper
     -> how many preprocessors would be run in parallel"""
-    return self._wrapVariable(self.args.monav_parallel_threads, "monav_parallel_threads", 1)
+    return self._wrapVariable(self.args.monav_pool_size, "monav_parallel_threads", 1)
 
-  @integer
   def getMonavParallelThreshold(self):
     """Monav preprocessor parallel run threshold wrapper
     -> don't run monav preprocessors in parallel is source data is larger than threshold"""
-    return self._wrapVariable(self.args.monav_parallel_threshold, "monav_parallel_threshold", None)
+    result = self._wrapVariable(self.args.monav_pool_threshold, "monav_parallel_threshold", None)
+    if result is not None:
+      return int(result)
+    else:
+      return result
 
   @string
   def getMonavCSVPath(self):

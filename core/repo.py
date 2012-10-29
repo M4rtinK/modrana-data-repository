@@ -76,14 +76,14 @@ class Repository(object):
     # start the processing processes
     for i in range(self.getProcessingPoolSize()):
       p = mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
-      p.daemon = True
+      p.daemon = False
       p.start()
     # start the packaging processes
     for i in range(self.getPackagingPoolSize()):
       p = mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
       p.daemon = True
       p.start()
-#    # start the publishing process
+    # start the publishing process
     self.publishingProcess = mp.Process(target=self._publishPackage, args=(self.publishQueue,),)
     self.publishingProcess.daemon = True
     self.publishingProcess.start()
