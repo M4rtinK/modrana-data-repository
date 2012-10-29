@@ -277,6 +277,12 @@ class MonavPackage(Package):
       # run preprocessors in parallel (depending on current settings)
       pool = mp.Pool(processes=maxParallelPreprocessors)
       pool.map(runPreprocessor, tasks)
+      # closing the pool is important, otherwise the workers in the poll will
+      # not exit - after a while the inactive threads will accumulate and
+      # no more new ones can be started
+      pool.close()
+      # just to be sure
+      pool.join()
 
       return True
     except Exception, e:
