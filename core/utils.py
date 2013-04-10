@@ -104,7 +104,10 @@ def url2repoPathFilenameName(url, urlType):
   rawRepoPath, filename = os.path.split(wholePath)
   name = filename.split('.')[0]
   # remove the latest suffix
+  # introduced by Geofabrik
   name.replace("-latest", "")
+  # TODO: something more flexible
+  # for generic links
   geofabrikPrefix = "http://download.geofabrik.de/openstreetmap/"
   if url.startswith(geofabrikPrefix):
     # we are currently using the Geofabrik URLs with the openstreetmap prefix
