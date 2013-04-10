@@ -127,6 +127,12 @@ class Startup:
       default=None,
       action="store"
     )
+    parser.add_argument(
+      '--monav-dont-sort-urls',
+      help="don't sort PBF URLs by size (sensible choice for very long lists or URLs)",
+      default=False,
+      action="store_true"
+    )
 
     self.args = parser.parse_args()
 

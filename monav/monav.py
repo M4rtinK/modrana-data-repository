@@ -71,10 +71,14 @@ class MonavRepository(Repository):
         urls.append(row[0])
     f.close()
 
-    # sort the URLs by size
-    print('monav loader: sorting URLs by size in ascending order')
-    sortedUrls, totalSize = utils.sortUrlsBySize(urls)
-    print('monav loader: total download size: %s' % utils.bytes2PrettyUnitString(totalSize))
+    if self.manager.args.monav_dont_sort_urls:
+      print('monav loader: URL sorting disabled')
+      sortedUrls = map(lambda x: (0, x), urls)
+    else:
+      # sort the URLs by size
+      print('monav loader: sorting URLs by size in ascending order')
+      sortedUrls, totalSize = utils.sortUrlsBySize(urls)
+      print('monav loader: total download size: %s' % utils.bytes2PrettyUnitString(totalSize))
 
     # download all the URLs
     packId = 0
@@ -336,6 +340,11 @@ class MonavPackage(Package):
 
   def publish(self, mainRepoPath, cleanup=True):
     """publish the package to the online repository"""
+
+    print "ASDASDASDASDADSDASD"
+    print mainRepoPath
+    print self.repoSubPath
+
     for path2file in self.results:
       finalRepoPath = os.path.join(mainRepoPath, self.repoSubPath)
       try:
