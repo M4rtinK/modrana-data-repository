@@ -103,13 +103,13 @@ def url2repoPathFilenameName(url, urlType):
   wholePath = urlparse.urlparse(url)[2]
   rawRepoPath, filename = os.path.split(wholePath)
   name = filename.split('.')[0]
-  # remove the latest suffix
-  # introduced by Geofabrik
-  name.replace("-latest", "")
-  # TODO: something more flexible
-  # for generic links
-  geofabrikPrefix = "http://download.geofabrik.de/openstreetmap/"
+  geofabrikPrefix = "http://download.geofabrik.de/"
   if url.startswith(geofabrikPrefix):
+    # remove the latest suffix
+    # used by Geofabrik from the
+    # package name and filename
+    name = name.replace("-latest", "")
+    filename = filename.replace("-latest", "")
     # we are currently using the Geofabrik URLs with the openstreetmap prefix
     # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
     # normalize the path to get rid of doubled separators, etc.
@@ -119,6 +119,8 @@ def url2repoPathFilenameName(url, urlType):
     # ignore leading path separator
     if components[0] in (os.pathsep, os.altsep):
       cutIndex = 2
+    elif components[0] != 'openstreetmap':
+      cutIndex = 0
     else:
       cutIndex = 1
     components = components[cutIndex:]
