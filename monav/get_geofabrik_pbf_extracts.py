@@ -26,7 +26,19 @@ import urlparse
 
 http = httplib2.Http()
 
-STARTING_URL = 'http://download.geofabrik.de/openstreetmap/'
+BASE_URL = 'http://download.geofabrik.de/'
+STARTING_URL = BASE_URL + 'openstreetmap/'
+DATA_URLS = {
+  BASE_URL + 'africa',
+  BASE_URL + 'antarctica',
+  BASE_URL + 'asia',
+  BASE_URL + 'australia-oceania',
+  BASE_URL + 'central-america',
+  BASE_URL + 'europe',
+  BASE_URL + 'north-america',
+  BASE_URL + 'south-america',
+}
+
 
 visited = set() # tracks visited urls to prevent an infinite loop
 
@@ -45,15 +57,37 @@ def parsePage(url):
   else:
     return []
 
+def is_valid(url):
+  # first prevent the recursive
+  # parsing from exiting the geofabrik domain
+  if not url.startswith(BASE_URL):
+    return False
+  # skip the updates folders
+  if "-updates" in url:
+    return False
+
+
+  for url in DATA_URLS:
+    if url.startswith(url):
+      return True
+  return False
+
 def checkUrl(url):
   """* if an url is a pbf file, print it and return None
   * if and url is inside the STARTING_URL prefix, return it
   * if it is outside, return None"""
-  if url.startswith(STARTING_URL):
+  #print "URL " + url
+  if is_valid(url):
+    # check if it is a PBF file
+
     path, ext = os.path.splitext(url)
     if ext:
       if ext == '.pbf':
-        print url
+        # only get the latest PBF files
+        if url.endswith("-latest.osm.pbf"):
+          print url
+        else:
+          return None
       else:
         return None
     else:
