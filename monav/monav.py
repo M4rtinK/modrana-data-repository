@@ -341,10 +341,6 @@ class MonavPackage(Package):
   def publish(self, mainRepoPath, cleanup=True):
     """publish the package to the online repository"""
 
-    print "ASDASDASDASDADSDASD"
-    print mainRepoPath
-    print self.repoSubPath
-
     for path2file in self.results:
       finalRepoPath = os.path.join(mainRepoPath, self.repoSubPath)
       try:
