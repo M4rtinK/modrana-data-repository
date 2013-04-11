@@ -39,8 +39,8 @@ DATA_URLS = {
   BASE_URL + 'south-america',
 }
 
-
 visited = set() # tracks visited urls to prevent an infinite loop
+seen_PBFs = set() # track already seen PBFs
 
 def parsePage(url):
   """return all URLs from a given URL"""
@@ -77,6 +77,7 @@ def checkUrl(url):
   * if and url is inside the STARTING_URL prefix, return it
   * if it is outside, return None"""
   #print "URL " + url
+
   if is_valid(url):
     # check if it is a PBF file
 
@@ -84,7 +85,10 @@ def checkUrl(url):
     if ext:
       if ext == '.pbf':
         # only get the latest PBF files
-        if url.endswith("-latest.osm.pbf"):
+        if url.endswith("-latest.osm.pbf") and url not in seen_PBFs:
+          # add the url to the set of already found urls
+          # to prevent printing out duplicates
+          seen_PBFs.add(url)
           print url
         else:
           return None
