@@ -116,18 +116,22 @@ def url2repoPathFilenameName(url, urlType):
     rawRepoPath = os.path.normpath(rawRepoPath)
     # split it to a list of components
     components = path2components(rawRepoPath)
-    # ignore leading path separator
-    if components[0] in (os.pathsep, os.altsep):
-      cutIndex = 2
-    elif components[0] != 'openstreetmap':
-      cutIndex = 0
+
+    if components == []:
+      repoSubPath = ""  # toplevel file
     else:
-      cutIndex = 1
-    components = components[cutIndex:]
-    if components:
-      repoSubPath = os.path.join(*components)
-    else:
-      repoSubPath = ""
+      # ignore leading path separator
+      if components[0] in (os.pathsep, os.altsep):
+        cutIndex = 2
+      elif components[0] != 'openstreetmap':
+        cutIndex = 0
+      else:
+        cutIndex = 1
+      components = components[cutIndex:]
+      if components:
+        repoSubPath = os.path.join(*components)
+      else:
+        repoSubPath = ""
 #  if urlType == URL_GEOFABRIK:
 #    # we are currently using the Geofabrik URLs with the openstreetmap prefix
 #    # -> we drop the openstreetmap prefix, leave the continent/country/city/etc suffix
