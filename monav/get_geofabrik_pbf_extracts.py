@@ -27,7 +27,7 @@ import urlparse
 http = httplib2.Http()
 
 BASE_URL = 'http://download.geofabrik.de/'
-STARTING_URL = BASE_URL + 'openstreetmap/'
+STARTING_URL = BASE_URL
 DATA_URLS = {
   BASE_URL + 'africa',
   BASE_URL + 'antarctica',
@@ -100,7 +100,7 @@ def checkUrl(url):
     return None
 
 def getLinks(urls):
-  """call parsePage recursively"""
+  """call parse_page recursively"""
   for url in urls:
     getLinks(parsePage(url))
 
