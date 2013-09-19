@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
-# Geofabrik coutry polygon link extractor, part of the modRana data repository project
+# Geofabrik country polygon link extractor, part of the modRana data repository project
 #----------------------------------------------------------------------------
 # Copyright 2012, Martin Kolman
 #
@@ -96,9 +96,14 @@ def check_url(url, download_folder):
 
                     # remove the base URL prefix
                     filename = url[len(BASE_URL):]
+                    folders, filename = os.path.split(filename)
                     # replace / with _
                     filename = filename.replace("/", "_")
-                    download_path = os.path.join(download_folder, filename)
+                    folder_path = os.path.join(download_folder, folders)
+                    # make sure the path to the storage folder exists
+                    if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
+                    download_path = os.path.join(folder_path, filename)
                     # download the poly files
                     urllib.urlretrieve(url, download_path)
                     print url
@@ -123,7 +128,9 @@ def main():
     download_folder = "."
     if len(sys.argv) >= 2:
         download_folder = sys.argv[1]
-    # use absolute path
+    else:
+        print("path to download folder not specified, downloading to PWD")
+    # convert to absolute path
     download_folder = os.path.abspath(download_folder)
 
     get_links([STARTING_URL], download_folder)
