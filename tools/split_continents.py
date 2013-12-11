@@ -79,7 +79,7 @@ for continent in continents:
     args.extend(["--tee", str(len(polygons))]) # add number of pipes
     # add source & destination for each polygon
     for poly_path in polygons:
-        pbf_path = "%s.pbf" % os.path.splitext(poly_path)[0]
+        pbf_path = "%s.osm.pbf" % os.path.splitext(poly_path)[0]
         # remove the "polys" prefix
         # (split by path separator, drop first item, rejoin)
         pbf_path = os.path.join(*os_path_split_full(pbf_path)[1:])
@@ -103,4 +103,5 @@ for continent in continents:
     # print("%s" % args)
     print("running Osmosis")
     print("return code: %d" % subprocess.call(args))
+
 print("all done")
