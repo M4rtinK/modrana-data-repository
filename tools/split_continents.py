@@ -72,9 +72,9 @@ for continent in continents:
         args.extend(["--buffer", "--bp", "file=%s" % source,
                     "--buffer", "--write-pbf", "%s" % destination])
 
-    for root, dir, files in os.walk(continent):
-        for file in files:
-            add_poly(os.path.join(continent, root, file))
+    for root, d, files in os.walk(continent):
+        for f in files:
+            add_poly(os.path.join(root, f))
 
     poly_count = len(polygons)
     args.extend(["--tee", str(poly_count)]) # add number of pipes
