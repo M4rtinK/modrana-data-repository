@@ -57,7 +57,7 @@ def os_path_split_full(path):
 for continent in continents:
     continent_name = os.path.basename(continent)
     print("processing continent %s" % continent_name)
-    continent_pbf = os.path.join(CONTINENT_PBF_DIR, continent_name, ".pbf")
+    continent_pbf = os.path.join(CONTINENT_PBF_DIR, "%s.osm.pbf" % continent_name)
     continent_pbf = os.path.abspath(continent_pbf)
     args = [OSMOSIS,"-v", "--read-pbf", continent_pbf]
     polygons = []
