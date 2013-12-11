@@ -100,7 +100,7 @@ for continent in continents:
         add_region(poly_path, pbf_path)
 
     print("Osmosis arguments generated (%d regions)" % poly_count)
-    # print("%s" % args)
+    # print(" ".join(args))
     print("running Osmosis")
     print("return code: %d" % subprocess.call(args))
 
