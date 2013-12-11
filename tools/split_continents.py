@@ -21,7 +21,7 @@ POLY_DIR = "polys"
 CONTINENT_PBF_DIR = "../planet/split"
 
 BUFFER_CAPACITY = 10000  # number of nodes to buffer in RAM before writing
-BUFFER_STRING = "--buffer bufferCapacity=%d" % BUFFER_CAPACITY
+BUFFER_SIZE = "bufferCapacity=%d" % BUFFER_CAPACITY
 
 # set output directory
 OUT_DIR = "../planet/split"
@@ -72,8 +72,8 @@ for continent in continents:
             polygons.append(path)
 
     def add_region(source, destination):
-        args.extend([BUFFER_STRING, "--bp", "file=%s" % source,
-                    BUFFER_STRING, "--write-pbf", "compress=none",
+        args.extend(["--buffer", BUFFER_SIZE, "--bp", "file=%s" % source,
+                    "--buffer", BUFFER_SIZE, "--write-pbf", "compress=none",
                     "%s" % destination])
 
     for root, d, files in os.walk(continent):
