@@ -20,6 +20,9 @@ POLY_DIR = "polys"
 # path to dir where continental extracts are stored
 CONTINENT_PBF_DIR = "../planet/split"
 
+BUFFER_CAPACITY = 10000  # number of nodes to buffer in RAM before writing
+BUFFER_STRING = "--buffer bufferCapacity=%d" % BUFFER_CAPACITY
+
 # set output directory
 OUT_DIR = "../planet/split"
 if len(sys.argv) >= 2:
@@ -59,7 +62,7 @@ for continent in continents:
     print("processing continent %s" % continent_name)
     continent_pbf = os.path.join(CONTINENT_PBF_DIR, "%s.osm.pbf" % continent_name)
     continent_pbf = os.path.abspath(continent_pbf)
-    args = [OSMOSIS,"-v", "--read-pbf", continent_pbf]
+    args = [OSMOSIS,"-v", "--read-pbf-fast", continent_pbf]
     polygons = []
     # recursively parse all polygon files for the given continent
 
@@ -69,8 +72,9 @@ for continent in continents:
             polygons.append(path)
 
     def add_region(source, destination):
-        args.extend(["--buffer", "--bp", "file=%s" % source,
-                    "--buffer", "--write-pbf", "%s" % destination])
+        args.extend([BUFFER_STRING, "--bp", "file=%s" % source,
+                    BUFFER_STRING, "--write-pbf", "compress=none",
+                    "%s" % destination])
 
     for root, d, files in os.walk(continent):
         for f in files:
