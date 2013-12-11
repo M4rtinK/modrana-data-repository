@@ -20,7 +20,7 @@ POLY_DIR = "polys"
 # path to dir where continental extracts are stored
 CONTINENT_PBF_DIR = "../planet/split"
 
-BUFFER_CAPACITY = 10000  # number of nodes to buffer in RAM before writing
+BUFFER_CAPACITY = 100000  # number of nodes to buffer in RAM before writing
 BUFFER_SIZE = "bufferCapacity=%d" % BUFFER_CAPACITY
 
 # set output directory
