@@ -58,6 +58,7 @@ for continent in continents:
     continent_name = os.path.basename(continent)
     print("processing continent %s" % continent_name)
     continent_pbf = os.path.join(CONTINENT_PBF_DIR, continent_name, ".pbf")
+    continent_pbf = os.path.abspath(continent_pbf)
     args = [OSMOSIS,"-v", "--read-pbf", continent_pbf]
     polygons = []
     # recursively parse all polygon files for the given continent
@@ -76,7 +77,7 @@ for continent in continents:
             add_poly(os.path.join(continent, root, file))
 
     poly_count = len(polygons)
-    args.extend(["--tee", str(len(polygons))]) # add number of pipes
+    args.extend(["--tee", str(poly_count)]) # add number of pipes
     # add source & destination for each polygon
     for poly_path in polygons:
         pbf_path = "%s.osm.pbf" % os.path.splitext(poly_path)[0]
