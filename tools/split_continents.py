@@ -72,9 +72,15 @@ for continent in continents:
             polygons.append(path)
 
     def add_region(source, destination):
-        args.extend(["--buffer", BUFFER_SIZE, "--bp", "file=%s" % source,
-                    "--buffer", BUFFER_SIZE, "--write-pbf", "compress=none",
-                    "%s" % destination])
+        args.extend(["--buffer", BUFFER_SIZE, "--bp", "--clipIncompleteEntities=true"
+                     "file=%s" % source,
+                     "--buffer", BUFFER_SIZE, "--write-pbf", "compress=none",
+                     "%s" % destination])
+
+        # --clipIncompleteEntities=false -> clip ways referencing to
+        # nodes outside the bounding polygon (Geofabrik does this)
+        # TODO: investigate how long would --completeWays=true take
+        #       ang how would it behave
 
     for root, d, files in os.walk(continent):
         for f in files:
