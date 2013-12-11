@@ -68,7 +68,7 @@ for continent in continents:
             polygons.append(path)
 
     def add_region(source, destination):
-        args.extend(["--buffer", "--bp", "--file=%s" % source,
+        args.extend(["--buffer", "--bp", "file=%s" % source,
                     "--buffer", "--write-pbf", "%s" % destination])
 
     for root, dir, files in os.walk(continent):
@@ -76,7 +76,7 @@ for continent in continents:
             add_poly(os.path.join(continent, root, file))
 
     poly_count = len(polygons)
-    args.extend(["--tee", len(polygons)]) # add number of pipes
+    args.extend(["--tee", str(len(polygons))]) # add number of pipes
     # add source & destination for each polygon
     for poly_path in polygons:
         pbf_path = "%s.pbf" % os.path.splitext(poly_path)[0]
@@ -84,8 +84,19 @@ for continent in continents:
         # (split by path separator, drop first item, rejoin)
         pbf_path = os.path.join(*os_path_split_full(pbf_path)[1:])
         # add the output folder prefix
-
         pbf_path = os.path.join(OUT_DIR, pbf_path)
+        # convert to absolute path, or else makedirs
+        # (or possible other utilities ?)
+        pbf_path = os.path.abspath(pbf_path)
+        poly_path = os.path.abspath(poly_path)
+        # make sure the pfb folder exists
+        dir_path = os.path.dirname(pbf_path)
+        try:
+            os.makedirs(os.path.dirname(pbf_path))
+        except os.error:
+            # folder exists or can't be created
+            pass
+
         add_region(poly_path, pbf_path)
 
     print("Osmosis arguments generated (%d regions)" % poly_count)
