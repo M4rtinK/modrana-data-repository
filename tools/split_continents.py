@@ -72,7 +72,7 @@ for continent in continents:
             polygons.append(path)
 
     def add_region(source, destination):
-        args.extend(["--buffer", BUFFER_SIZE, "--bp", "--clipIncompleteEntities=true"
+        args.extend(["--buffer", BUFFER_SIZE, "--bp", "clipIncompleteEntities=true"
                      "file=%s" % source,
                      "--buffer", BUFFER_SIZE, "--write-pbf", "compress=none",
                      "%s" % destination])
