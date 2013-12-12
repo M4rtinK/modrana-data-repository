@@ -1,4 +1,4 @@
-#/usr/bin/python
+#!/usr/bin/python
 #
 # Split individual continents as described by regional
 # *.poly files. This script does not do the actually
