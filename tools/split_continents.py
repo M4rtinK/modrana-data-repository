@@ -24,7 +24,8 @@ CONTINENT_PBF_DIR = "../planet/split"
 BUFFER_CAPACITY = 10000  # number of nodes to buffer in RAM before writing
 BUFFER_SIZE_OVERRIDE = {
     "continent" : {
-        "europe" : 1000 # Europe has many regions, we need to use a smaller buffer
+        "europe" : 10000 # Europe has many regions, we might sometimes
+                         # need to use a smaller buffer
     }
 }
 
