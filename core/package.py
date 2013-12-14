@@ -21,77 +21,79 @@
 
 import time
 
+
 class Package(object):
-  # states
+    # states
 
-  LOADING = 1
-  PROCESSING = 2
-  DONE = 3
+    LOADING = 1
+    PROCESSING = 2
+    DONE = 3
 
-  def __init__(self):
-    self.name = None
-    self.size = None
-    # this timestamp relates to when
-    # the source data were last updated
-    self.sourceTimestamp = None
-    # repository path suffix
-    # ex.: europe/france/ for French regions
-    self.repoSubPath = ""
-    # current state of package processing
-    self.state = None
-    # combined time spend on package processing in seconds
-    self.processingTime = 0
-    # current loading progress 0.0 = 0%, 1.0 = 100%
-    self.loadingProgress = 0.0
+    def __init__(self):
+        self.name = None
+        self.size = None
+        # this timestamp relates to when
+        # the source data were last updated
+        self.sourceTimestamp = None
+        # repository path suffix
+        # ex.: europe/france/ for French regions
+        self.repoSubPath = ""
+        # current state of package processing
+        self.state = None
+        # combined time spend on package processing in seconds
+        self.processingTime = 0
+        # current loading progress 0.0 = 0%, 1.0 = 100%
+        self.loadingProgress = 0.0
 
-  def getName(self):
-    return self.name
+    def getName(self):
+        return self.name
 
-  def getState(self):
-    return self.state
+    def getState(self):
+        return self.state
 
-  def getLoadingProgress(self):
-    return self.loadingProgress
+    def getLoadingProgress(self):
+        return self.loadingProgress
 
-  def _addProcessingTime(self, pTime):
-    self.processingTime+=pTime
+    def _addProcessingTime(self, pTime):
+        self.processingTime += pTime
 
-  def getProcessingTime(self):
-    """return how long this package took to process so far in seconds"""
-    return self.processingTime
+    def getProcessingTime(self):
+        """return how long this package took to process so far in seconds"""
+        return self.processingTime
 
-  def _timeit(self, fn):
-    def wrapped():
-      start = time.time()
-      fn()
-      self._addProcessingTime(time.time()- start)
-    return wrapped
+    def _timeit(self, fn):
+        def wrapped():
+            start = time.time()
+            fn()
+            self._addProcessingTime(time.time() - start)
 
-  def load(self):
-    """load any source data needed by the package to storage"""
-    pass
+        return wrapped
 
-  def process(self):
-    """process the source data"""
-    pass
+    def load(self):
+        """load any source data needed by the package to storage"""
+        pass
 
-  def package(self):
-    """package the results"""
-    pass
+    def process(self):
+        """process the source data"""
+        pass
 
-  def publish(self, path):
-    """publish the data to the online repository"""
-    pass
+    def package(self):
+        """package the results"""
+        pass
 
-  def getResults(self):
-    """return a list file-paths pointing to results
-    of the processing & packaging steps that now need to be published
-    """
-    pass
+    def publish(self, path):
+        """publish the data to the online repository"""
+        pass
 
-  def clearAll(self):
-    """clear all data created during package processing
-    -> this currently means source & temporary data,
-    not results, if they were already published"""
+    def getResults(self):
+        """return a list file-paths pointing to results
+        of the processing & packaging steps that now need to be published
+        """
+        pass
+
+    def clearAll(self):
+        """clear all data created during package processing
+        -> this currently means source & temporary data,
+        not results, if they were already published"""
 
 

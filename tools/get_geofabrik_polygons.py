@@ -123,6 +123,7 @@ def get_links(urls, download_folder):
     for url in urls:
         get_links(parse_page(url, download_folder), download_folder)
 
+
 def main():
     print(sys.argv)
     download_folder = "."
@@ -130,9 +131,10 @@ def main():
         download_folder = sys.argv[1]
     else:
         print("path to download folder not specified, downloading to PWD")
-    # convert to absolute path
+        # convert to absolute path
     download_folder = os.path.abspath(download_folder)
 
     get_links([STARTING_URL], download_folder)
+
 
 main()

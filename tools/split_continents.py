@@ -23,11 +23,12 @@ CONTINENT_PBF_DIR = "../planet/split"
 
 BUFFER_CAPACITY = 10000  # number of nodes to buffer in RAM before writing
 BUFFER_SIZE_OVERRIDE = {
-    "continent" : {
-        "europe" : 10000 # Europe has many regions, we might sometimes
-                         # need to use a smaller buffer
+    "continent": {
+        "europe": 10000 # Europe has many regions, we might sometimes
+        # need to use a smaller buffer
     }
 }
+
 
 def get_buffer_size(some_continent, region_count):
     # get override from the override dictionary
@@ -45,13 +46,13 @@ def get_buffer_size(some_continent, region_count):
 DEFAULT_OUT_DIR = "../planet/split"
 
 parser = argparse.ArgumentParser(description="Split continents to regions")
-parser.add_argument("-o", "--out", help = "output dir", type=str, default=DEFAULT_OUT_DIR, dest="out")
-parser.add_argument("-c", "--continent", help = "split only this continent (subfolder name)",
+parser.add_argument("-o", "--out", help="output dir", type=str, default=DEFAULT_OUT_DIR, dest="out")
+parser.add_argument("-c", "--continent", help="split only this continent (subfolder name)",
                     type=str, action="append", default=[], dest="continents")
-parser.add_argument("--dry-run", help = "don't actually run Osmosis", default=False,
+parser.add_argument("--dry-run", help="don't actually run Osmosis", default=False,
                     dest="dry_run", action="store_true")
-parser.add_argument("-v", help = "verbose", default=False, dest="verbose", action="store_true")
-parser.add_argument("--show-args", help = "show the generated Osmosis commandline args",
+parser.add_argument("-v", help="verbose", default=False, dest="verbose", action="store_true")
+parser.add_argument("--show-args", help="show the generated Osmosis commandline args",
                     default=False, dest="show_args", action="store_true")
 
 args = parser.parse_args()
@@ -72,6 +73,7 @@ print("%d continents detected:" % len(continents))
 continent_names = [os.path.basename(f) for f in continents]
 print(", ".join(continent_names))
 
+
 def os_path_split_full(path):
     parts = []
     while True:
@@ -84,6 +86,7 @@ def os_path_split_full(path):
         path = new_path
     parts.reverse()
     return parts
+
 
 for continent in continents:
     continent_name = os.path.basename(continent)
@@ -98,7 +101,7 @@ for continent in continents:
     continent_pbf = os.path.join(CONTINENT_PBF_DIR, "%s.osm.pbf" % continent_name)
     continent_pbf = os.path.abspath(continent_pbf)
     if args.verbose:
-        osmosis_args = [OSMOSIS,"-v"]
+        osmosis_args = [OSMOSIS, "-v"]
     else:
         osmosis_args = [OSMOSIS]
     osmosis_args.extend(["--read-pbf-fast", continent_pbf])
@@ -111,7 +114,6 @@ for continent in continents:
             polygons.append(path)
 
 
-
     for root, d, files in os.walk(continent):
         for f in files:
             add_poly(os.path.join(root, f))
@@ -122,9 +124,9 @@ for continent in continents:
     def add_region(source, destination):
         buffer_size = get_buffer_size(continent_name, poly_count)
         osmosis_args.extend(["--buffer", buffer_size, "--bp", "clipIncompleteEntities=true",
-                     "file=%s" % source,
-                     "--buffer", buffer_size, "--write-pbf", "compress=none",
-                     "%s" % destination])
+                             "file=%s" % source,
+                             "--buffer", buffer_size, "--write-pbf", "compress=none",
+                             "%s" % destination])
 
         # --clipIncompleteEntities=false -> clip ways referencing to
         # nodes outside the bounding polygon (Geofabrik does this)
