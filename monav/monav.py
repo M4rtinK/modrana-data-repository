@@ -40,6 +40,7 @@ class MonavRepository(Repository):
     def __init__(self, manager):
         Repository.__init__(self, manager)
         self.preprocessorPath = manager.getMonavPreprocessorPath()
+        self.manager = manager
 
     def getName(self):
         return "Monav"
@@ -56,6 +57,63 @@ class MonavRepository(Repository):
         return True
 
     def _loadData(self, sourceQueue):
+        # check from where to load data
+        if self.manager.args.data_source == repo.DATA_SOURCE_FOLDER:
+            sourceFolder = self.manager.args.source_data_folder
+            self._loadLocalData(sourceQueue, sourceFolder)
+        else:  # download data
+            self._downloadData(sourceQueue)
+
+    def _loadLocalData(self, sourceQueue, sourceFolder):
+        print('monav loader: starting')
+        tempPath = self.getTempPath()
+        # store all PBF files to a list, so we
+        # can print some stats on them & process them
+        files = []
+        accumulatedSize = 0
+        print("monav loader: loading data from local folder:")
+        print("%s" % sourceFolder)
+        for root, dirs, dirFiles in os.walk(sourceFolder):
+            for f in dirFiles:
+                if os.path.splitext(f)[1] == ".pbf":
+                    filePath = os.path.join(root, f)
+                    fileSize = os.path.getsize(filePath)
+                    accumulatedSize += fileSize
+                    files.append( (filePath, fileSize) )
+        fileCount = len(files)
+
+        print("monav loader: found %d PBF files together %s in size" % (
+            fileCount,
+            utils.bytes2PrettyUnitString(accumulatedSize)
+        )
+        )
+
+        # generate a package for every PBF file
+        packId = 0
+        for f, fSize in files:
+            try:
+                metadata = {
+                    'packId': packId,
+                    'tempPath': tempPath,
+                    'helperPath': self.getFolderName(),
+                    'preprocessorPath': self.preprocessorPath,
+                    'filePath' : f,
+                    'filePathPrefix' : sourceFolder
+                }
+                pack = MonavPackage(metadata)
+                packId += 1
+                sizeString = utils.bytes2PrettyUnitString(fSize)
+                print('monav loader: loading %d/%d: %s (%s)' % (packId, fileCount, pack.getName(), sizeString))
+                pack.load()
+                sourceQueue.put(pack)
+            except Exception, e:
+                print('monav loader: loading PBF file failed: %s' % f)
+                print(e)
+                traceback.print_exc(file=sys.stdout)
+
+        print('monav loader: all source files loaded')
+
+    def _downloadData(self, sourceQueue):
         tempPath = self.getTempPath()
         csvFilePath = self.manager.getMonavCSVPath()
         # get a CSV line count to get approximate repository update progress
@@ -90,9 +148,10 @@ class MonavRepository(Repository):
                     'tempPath': tempPath,
                     'helperPath': self.getFolderName(),
                     'preprocessorPath': self.preprocessorPath,
+                    'url' : url,
                     'urlType': self._getSourceUrlType()
                 }
-                pack = MonavPackage(url, metadata)
+                pack = MonavPackage(metadata)
                 packId += 1
                 if size is None:
                     sizeString = "unknown size"
@@ -167,27 +226,59 @@ class MonavRepository(Repository):
             publishQueue.task_done()
         print('monav publisher: shutting down')
 
-
 class MonavPackage(Package):
-    def __init__(self, url, metadata):
+    def __init__(self, metadata):
         Package.__init__(self)
-        self.url = url
-        self.helperPath = metadata['helperPath'] # for accessing the base.ini file for Monav preprocessor
+        self.url = metadata.get('url')
+        urlType = metadata.get('urlType')
+        self.filePath = metadata.get('filePath')
+        self.filePathPrefix = metadata.get('filePathPrefix')
+        self.helperPath = metadata.get('helperPath') # for accessing the base.ini file for Monav preprocessor
         self.preprocessorPath = metadata['preprocessorPath']
         # split to repoSubPath & filename
         # -> repoSubPath = continent/country/etc.
-        urlType = metadata['urlType']
-        self.repoSubPath, self.filename, self.name = utils.url2repoPathFilenameName(url, urlType)
+        if self.filePath:
+            self.repoSubPath, self.filename, self.name = utils.pbfPath2repoPathFilenameName(
+                self.filePath, self.filePathPrefix
+            )
+            self.sourceDataPath = self.filePath
+        else: # url
+            self.repoSubPath, self.filename, self.name = utils.url2repoPathFilenameName(self.url, urlType)
+            self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
         # a temporary working directory for this package only (unique id prefix)
         self.tempPath = os.path.join(metadata['tempPath'], str(metadata['packId']))
         # a subdirectory named after the package
         self.tempStoragePath = os.path.join(self.tempPath, self.name)
-        # path to the source data file
-        self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
+
         # paths to resulting data files
         self.results = []
 
     def load(self):
+        if self.filePath:
+            self._loadFromFile()
+        else:  # url
+            self._download()
+
+    def _loadFromFile(self):
+        """Use local PBF file as data source"""
+        try:
+            if os.path.exists(self.sourceDataPath):
+                if os.path.exists(self.tempStoragePath):
+                    print('removing old temporary folder %s' % self.tempStoragePath)
+                    shutil.rmtree(self.tempStoragePath)
+                utils.createFolderPath(self.tempStoragePath)
+                return True
+        except Exception, e:
+            message = 'monav package: OSM PBF loading failed\n'
+            message += 'name: %s\n' % self.name
+            message += 'filePath: %s\n' % self.filePath
+            message += 'storage path: %s' % self.sourceDataPath
+            print(message)
+            print(e)
+            traceback.print_exc(file=sys.stdout)
+            return False
+
+    def _download(self):
         """download PBF extract from the URL and store it locally"""
         try:
             if os.path.exists(self.sourceDataPath):
@@ -364,3 +455,4 @@ class MonavPackage(Package):
     def clearAll(self):
         """remove the whole temporary directory for this pack"""
         shutil.rmtree(self.tempPath)
+

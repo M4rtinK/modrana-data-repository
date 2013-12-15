@@ -36,8 +36,13 @@ SHUTDOWN_SIGNAL = "shutdown"
 TEMP_PATH = "temp"
 RESULTS_PATH = "results"
 CONFIG_FILE_PATH = "repository.conf"
+DEFAULT_SOURCE_FOLDER = "planet/split"
 # URL types
 GEOFABRIK_URL = 1
+# data source types
+DATA_SOURCE_FOLDER = "folder"
+DATA_SOURCE_DOWNLOAD = "download"
+DEFAULT_DATA_SOURCE = DATA_SOURCE_DOWNLOAD
 
 
 class Repository(object):

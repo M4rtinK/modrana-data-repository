@@ -21,7 +21,8 @@
 #---------------------------------------------------------------------------
 import sys
 
-from core.repo import QUEUE_SIZE
+from core.repo import QUEUE_SIZE, DEFAULT_SOURCE_FOLDER
+from core.repo import DATA_SOURCE_DOWNLOAD, DATA_SOURCE_FOLDER, DEFAULT_DATA_SOURCE
 
 import core.argparse as argparse
 
@@ -36,6 +37,16 @@ class Startup:
             default=None, action="store"
         )
 
+        # Source data variables
+        parser.add_argument(
+            '--data-source', type=str,
+            help='which data source should be used to update the repository,'
+            'either local folder with OSM data or data download from Geofrabik',
+            choices=[DATA_SOURCE_DOWNLOAD, DATA_SOURCE_FOLDER],
+            default=DEFAULT_DATA_SOURCE,
+            action="store"
+        )
+
         # Folders
 
         parser.add_argument(
@@ -48,6 +59,12 @@ class Startup:
             '--repository-folder', metavar='repository folder', type=str,
             help='path to the repository folder',
             default=None,
+            action="store"
+        )
+        parser.add_argument(
+            '--source-data-folder', metavar='source data folder', type=str,
+            help='path to the source data folder (if folder data source is used)',
+            default=DEFAULT_SOURCE_FOLDER,
             action="store"
         )
 

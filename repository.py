@@ -117,6 +117,10 @@ class Manager(object):
         """repository folder path wrapper"""
         return self._wrapVariable(self.args.repository_folder, "repository_folder", repo.RESULTS_PATH)
 
+    def getDataSourceType(self):
+        """data source type wrapper"""
+        return self._wrapVariable(self.args.data_source, "data_source", repo.DEFAULT_DATA_SOURCE)
+
     @integer
     def getCpuCount(self):
         """cpu count wrapper"""
