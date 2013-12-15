@@ -160,6 +160,49 @@ def url2repoPathFilenameName(url, urlType):
 
     # based on http://stackoverflow.com/a/1551394
 
+def getNameFromPBF(pbfFilename):
+    """Extract pack nam from a PBF filename
+    by stripping the .pbf or .osm.pbf extension
+    """
+    osmPbfExt = ".osm.pbf"
+    pbfExt = ".pbf"
+    if pbfFilename.endswith(osmPbfExt):
+        return pbfFilename[:-len(osmPbfExt)]
+    elif pbfFilename.endswith(pbfExt):
+        return pbfFilename[:-len(pbfExt)]
+    else:  # just return the filename
+        return pbfFilename
+
+def pbfPath2repoPathFilenameName(pbfFilePath, pathPrefix):
+    """Extract the repository storage path from the source
+    data PBF file path
+    """
+    rawRepoPath, filename = os.path.split(pbfFilePath)
+    name = getNameFromPBF(filename)
+    # split repo path it to a list of components
+    components = path2components(rawRepoPath)
+    # split the prefix we want to remove to a list of components
+    # and get component count
+    prefixComponentCount = len(path2components(pathPrefix))
+
+    # TODO: investigate leading path separator handling
+    # if components[0] in (os.pathsep, os.altsep):
+    #     cutIndex = 2
+
+    cutIndex = prefixComponentCount
+
+    components = components[cutIndex:]
+    if components:
+        repoSubPath = os.path.join(*components)
+    else:
+        repoSubPath = ""
+    # add the package name to the repoSub path
+    # so that all the mode packages, checksum files, etc.
+    # share a folder
+    repoSubPath = os.path.join(repoSubPath, name)
+    return repoSubPath, filename, name
+
+    # based on http://stackoverflow.com/a/1551394
 
 def prettyTimeDiff(dtSeconds):
     """
