@@ -6,7 +6,8 @@
 # runs it.
 
 import os
-import sys
+import time
+import datetime
 import subprocess
 import argparse
 
@@ -29,6 +30,53 @@ BUFFER_SIZE_OVERRIDE = {
     }
 }
 
+def prettyTimeDiff(dtSeconds):
+    """
+    Get a datetime object or a int() Epoch timestamp and return a
+    pretty string like 'an hour ago', 'Yesterday', '3 months ago',
+    'just now', etc
+    """
+    diff = datetime.timedelta(seconds=dtSeconds)
+    second_diff = diff.seconds
+    day_diff = diff.days
+
+    if day_diff < 0:
+        return ''
+
+    if day_diff == 0:
+        if second_diff < 60:
+            return str(second_diff) + " seconds"
+        if second_diff < 3600:
+            return str(second_diff / 60) + " minutes"
+        if second_diff < 86400:
+            return str(second_diff / 3600) + " hours"
+    if day_diff < 7:
+        return str(day_diff) + " days"
+    if day_diff < 31:
+        return str(day_diff / 7) + " weeks"
+    if day_diff < 365:
+        return str(day_diff / 30) + " months"
+    return str(day_diff / 365) + " years"
+
+# from:
+# http://www.5dollarwhitebox.org/drupal/node/84
+def bytes2PrettyUnitString(bytes):
+    bytes = float(bytes)
+    if bytes >= 1099511627776:
+        terabytes = bytes / 1099511627776
+        size = '%.2fTB' % terabytes
+    elif bytes >= 1073741824:
+        gigabytes = bytes / 1073741824
+        size = '%.2fGB' % gigabytes
+    elif bytes >= 1048576:
+        megabytes = bytes / 1048576
+        size = '%.2fMB' % megabytes
+    elif bytes >= 1024:
+        kilobytes = bytes / 1024
+        size = '%.2fKB' % kilobytes
+    else:
+        size = '%.2fb' % bytes
+    return size
 
 def get_buffer_size(some_continent, region_count):
     # get override from the override dictionary
@@ -58,6 +106,7 @@ parser.add_argument("--show-args", help="show the generated Osmosis commandline 
 args = parser.parse_args()
 
 print("continent splitter initiated")
+startTime = time.time()
 # check if alternative path to the osmosis
 # binary has been specified
 OSMOSIS = os.environ.get("OSMOSIS_PATH", "osmosis")
@@ -165,4 +214,7 @@ for continent in continents:
         print("running Osmosis")
         print("return code: %d" % subprocess.call(osmosis_args))
 
+dt = time.time() - startTime
+print("splitting finished in %s (%d seconds)" %
+      prettyTimeDiff(dt), int(dt))
 print("all done")
