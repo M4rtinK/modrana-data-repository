@@ -24,6 +24,7 @@ import csv
 import os
 import multiprocessing as mp
 import logging
+import time
 log = logging.getLogger("repo")
 source_log = logging.getLogger('repo.source')
 process_log = logging.getLogger('repo.process')
@@ -328,6 +329,7 @@ class MonavPackage(Package):
                 process_log.info('processing %s in 1 thread (threshold reached)', self.getName())
             else: # >1
                 process_log.info('processing %s in %d threads', self.getName(), maxParallelPreprocessors)
+            start_time = time.time()
             inputFile = self.sourceDataPath
             outputFolder = self.tempStoragePath
             baseINIPath = os.path.join(self.helperPath, "base.ini")
@@ -397,7 +399,8 @@ class MonavPackage(Package):
             #      pool.close()
             # just to be sure
             #      pool.join()
-
+            td = int(time.time() - start_time)
+            process_log.info('processed %s in %s', self.getName(), utils.prettyTimeDiff(td))
             return True
         except Exception, e:
             message = 'monav package: Monav routing data processing failed\n'
