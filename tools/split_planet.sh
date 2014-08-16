@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [[ -z "$OSMOSIS_PATH" ]]
+if [ -z "$OSMOSIS_PATH" ]
 then
     OSMOSIS=osmosis
 else
