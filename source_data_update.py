@@ -2,6 +2,7 @@
 import os
 import time
 import datetime
+from subprocess import call
 
 def prettyTimeDiff(dtSeconds):
     """
@@ -40,13 +41,13 @@ print("planet osm file update finished in %s" % prettyTimeDiff(dt))
 
 print("splitting the planet into continent sized chunks")
 start1=time.time()
-os.system("./tools/split_planet.sh")
+call("tools/split_planet.sh")
 dt = int(time.time() - start1)
 print("planet splitting finished in %s" % prettyTimeDiff(dt))
 
 print("splitting the continents into regions")
 start2=time.time()
-os.system("./tools/split_continents.py")
+call("tools/split_continents.py")
 dt = int(time.time() - start2)
 print("continent splitting finished in %s" % prettyTimeDiff(dt))
 
