@@ -9,8 +9,8 @@ fi
 echo "path to osmosis:"
 echo $OSMOSIS_PATH
 
-PLANET=../planet/planet-latest.osm.pbf
-POLYS=../tools/polys/
+PLANET=planet/planet-latest.osm.pbf
+POLYS=tools/polys/
 OUT="compress=none planet/split/"
 BUFFER="--buffer bufferCapacity=100000"
 
