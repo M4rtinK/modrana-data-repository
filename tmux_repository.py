@@ -8,7 +8,7 @@ import time
 import sys
 import subprocess
 
-log_folder = "repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S")
+log_folder = "logs/repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S")
 print("log folder: %s" % log_folder)
 
 #cmd = "tmux -u -f /usr/share/anaconda/tmux.conf start"

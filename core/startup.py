@@ -72,7 +72,7 @@ class Startup:
         parser.add_argument(
             '--log-folder', metavar='log folder', type=str,
             help='path to the log folder',
-            default="repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S"),
+            default="logs/repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S"),
             action="store"
         )
 
