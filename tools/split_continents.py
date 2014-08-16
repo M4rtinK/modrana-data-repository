@@ -174,6 +174,7 @@ for continent in continents:
         buffer_size = get_buffer_size(continent_name, poly_count)
         osmosis_args.extend(["--buffer", buffer_size, "--bp", "clipIncompleteEntities=true",
                              "file=%s" % source,
+                             "-q", 1,
                              "--buffer", buffer_size, "--write-pbf", "compress=none",
                              "%s" % destination])
 
