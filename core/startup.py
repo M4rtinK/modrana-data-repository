@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---------------------------------------------------------------------------
 import sys
+import time
 
 from core.repo import QUEUE_SIZE, DEFAULT_SOURCE_FOLDER
 from core.repo import DATA_SOURCE_DOWNLOAD, DATA_SOURCE_FOLDER, DEFAULT_DATA_SOURCE
@@ -65,6 +66,13 @@ class Startup:
             '--source-data-folder', metavar='source data folder', type=str,
             help='path to the source data folder (if folder data source is used)',
             default=DEFAULT_SOURCE_FOLDER,
+            action="store"
+        )
+
+        parser.add_argument(
+            '--log-folder', metavar='log folder', type=str,
+            help='path to the log folder',
+            default="repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S"),
             action="store"
         )
 
