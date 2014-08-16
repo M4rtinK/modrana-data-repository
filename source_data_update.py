@@ -2,7 +2,6 @@
 import os
 import time
 import datetime
-from subprocess import call
 
 def prettyTimeDiff(dtSeconds):
     """
@@ -35,7 +34,7 @@ def prettyTimeDiff(dtSeconds):
 print("starting modRana repository source data update")
 start=time.time()
 print("updating the planet osm file")
-#os.system("./tools/update_planet.sh")
+os.system("./tools/update_planet.sh")
 dt = int(time.time() - start)
 print("planet osm file update finished in %s" % prettyTimeDiff(dt))
 
