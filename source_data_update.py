@@ -41,13 +41,13 @@ print("planet osm file update finished in %s" % prettyTimeDiff(dt))
 
 print("splitting the planet into continent sized chunks")
 start1=time.time()
-call("tools/split_planet.sh")
+os.system("tools/split_planet.sh>split_planet.log")
 dt = int(time.time() - start1)
 print("planet splitting finished in %s" % prettyTimeDiff(dt))
 
 print("splitting the continents into regions")
 start2=time.time()
-call("tools/split_continents.py")
+os.system("tools/split_continents.py>split_continents.log")
 dt = int(time.time() - start2)
 print("continent splitting finished in %s" % prettyTimeDiff(dt))
 
