@@ -21,6 +21,8 @@
 
 import multiprocessing as mp
 import os
+import logging
+log = logging.getLogger("repo")
 
 # pool & queue sizes
 CPU_COUNT = mp.cpu_count()
@@ -72,7 +74,7 @@ class Repository(object):
     def update(self):
         # run pre-update
         if self._preUpdate() == False:
-            print('repository pre-update failed')
+            log.error('repository pre-update failed')
             return False
             # start the loading process
         tempPath = self.getTempPath()
@@ -102,7 +104,7 @@ class Repository(object):
 
         # run post-update
         if self._postUpdate() == False:
-            print('repository post-update failed')
+            log.error('repository post-update failed')
             return False
         return True
 

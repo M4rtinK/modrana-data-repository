@@ -21,12 +21,15 @@
 
 import multiprocessing as mp
 import time
+import logging
+log = logging.getLogger("repo")
 
 from monav import MonavRepository, PREPROCESSOR_PATH, SOURCE_DATA_URLS_CSV
 from core.configobj.configobj import ConfigObj
 from core import repo
 from core import utils
 from core import startup
+from core import repo_log
 
 # keywords
 SHUTDOWN_KEYWORD = "shutdown"
@@ -34,7 +37,6 @@ SHUTDOWN_KEYWORD = "shutdown"
 TEMP_PATH = "temp"
 RESULTS_PATH = "results"
 CONFIG_FILE_PATH = "repository.conf"
-
 
 # decorators
 def integer(fn):
@@ -59,25 +61,26 @@ class Manager(object):
         # load the configuration file
         self.args = startup.Startup().getArgs()
         self.conf = ConfigObj(self.getConfigPath())
+        # initialize logging
+        repo_log.init_logging(self.args.log_folder)
 
         # for now, update all repositories
         self.updateAll()
 
     def updateAll(self):
-
-        print("## starting repository update ##")
-        print ((self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
-        print("# CPU count: %d, proc. pool: %d, pack pool: %d" % (
+        log.info("## starting repository update ##")
+        log.info ((self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
+        log.info("# CPU count: %d, proc. pool: %d, pack pool: %d" % (
         self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
-        print("# queues: source: %d, pack: %d, publish: %d" % (
+        log.info("# queues: source: %d, pack: %d, publish: %d" % (
         self.getSourceQueueSize(), self.getPackagingQueueSize(), self.getPublishQueueSize()))
 
-        print("## updating Monav repository" )
-        print('# monav preprocessor threads: %d' % self.getMonavPreprocessorThreads())
-        print('# max parallel pp. per package: %d' % self.getMonavParallelThreads())
+        log.info("## updating Monav repository" )
+        log.info('# monav preprocessor threads: %d' % self.getMonavPreprocessorThreads())
+        log.info('# max parallel pp. per package: %d' % self.getMonavParallelThreads())
         ppThreshold = self.getMonavParallelThreshold()
         if ppThreshold:
-            print('# parallel pp. threshold: %d MB' % ppThreshold)
+            log.info('# parallel pp. threshold: %d MB' % ppThreshold)
         start = time.time()
         monav = MonavRepository(self)
         monav.update()
@@ -88,9 +91,9 @@ class Manager(object):
             # switches to larger units
         else:
             prettyTime = utils.prettyTimeDiff(dt)
-        print("## Monav repository updated in %s " % prettyTime)
+        log.info("## Monav repository updated in %s " % prettyTime)
 
-        print("## repository update finished ##")
+        log.info("## repository update finished ##")
 
     def getConfig(self):
         """return parsed config file"""
