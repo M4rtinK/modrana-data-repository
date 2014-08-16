@@ -9,12 +9,14 @@ import sys
 import subprocess
 
 log_folder = "logs/repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S")
+log_folder = os.path.abspath(log_folder)
 print("log folder: %s" % log_folder)
 
 #cmd = "tmux -u -f /usr/share/anaconda/tmux.conf start"
 
 os.environ['REPO_ARGV'] = " ".join(sys.argv[1:])
 os.environ['LOGS'] = log_folder
+os.environ['REPO_TOPLEVEL'] = os.path.abspath(".")
 print("starting tmux wrapper")
 subprocess.check_call(['tmux', '-u', '-f', 'core/data/tmux.conf', 'start'],
                       env=os.environ)
