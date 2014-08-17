@@ -112,7 +112,7 @@ def hash_file(file_path):
         return hasher.hexdigest()
 
 def get_files_in_folder_size(folder_path):
-    return sum(os.path.getsize(f) for f in os.listdir(folder_path) if os.path.isfile(f))
+    return sum(os.path.getsize(os.path.join(folder_path, f)) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)))
 
 def get_path_size(start_path):
     total_size = 0
