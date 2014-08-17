@@ -23,10 +23,10 @@ continents_split_log = os.path.join(log_folder, "split_continents.log")
 print("starting modRana repository source data update")
 start=time.time()
 print("updating the planet osm file")
-planet_update_rc = os.system("./tools/update_planet.sh&>%s" % planet_update_log)
+planet_update_rc = os.system("tools/update_planet.py&>%s" % planet_update_log)
 # only do the sanity check if the download was successful
 if planet_update_rc == 0:
-    planet_update_rc = os.system("./tools/sanity_check_update_planet.sh&>>%s" % planet_update_log)
+    planet_update_rc = os.system("tools/sanity_check_update_planet.py&>>%s" % planet_update_log)
 dt = int(time.time() - start)
 print("planet osm file update finished in %s" % prettyTimeDiff(dt))
 if planet_update_rc > 0:
