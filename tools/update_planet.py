@@ -1,12 +1,11 @@
 #!/usr/bin/python
-import shutil
 import os
 import urllib
 import hashlib
 
 PLANET_FOLDER = "planet"
 PLANET_FILENAME = "planet-latest.pbf"
-PLANET_PATH = os.path.join(PLANET_FOLDER, PLANET_FILENAME)
+PLANET_PATH = os.path.abspath(os.path.join(PLANET_FOLDER, PLANET_FILENAME))
 # located in Europe, good speed, updated weekly
 PLANET_URL = "http://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf"
 PLANET_MD5_URL = "http://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf.md5"
