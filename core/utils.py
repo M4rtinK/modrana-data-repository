@@ -37,29 +37,29 @@ def tarDir(path, tarFilename, fakeRoot=None):
     """compress all files in a directory to a (compressed) tar archive"""
     tar = tarfile.TarFile.open(tarFilename, 'w:gz')
     for root, dirs, files in os.walk(path):
-        for file in files:
+        for f in files:
             # use the fake package root if provided
             if fakeRoot:
-                inPath = os.path.join(root, file)
+                inPath = os.path.join(root, f)
                 archPath = os.path.relpath(inPath, fakeRoot)
                 tar.add(inPath, archPath)
             else:
-                tar.add(os.path.join(root, file))
+                tar.add(os.path.join(root, f))
     tar.close()
 
 
 def zipDir(path, zipFilename, fakeRoot=None):
     """compress all files in a directory to a zip archive"""
-    zip = zipfile.ZipFile(zipFilename, 'w', zipfile.ZIP_DEFLATED)
+    z = zipfile.ZipFile(zipFilename, 'w', zipfile.ZIP_DEFLATED)
     for root, dirs, files in os.walk(path):
-        for file in files:
+        for f in files:
             if fakeRoot is not None:
-                inPath = os.path.join(root, file)
+                inPath = os.path.join(root, f)
                 archPath = os.path.relpath(inPath, fakeRoot)
-                zip.write(inPath, archPath)
+                z.write(inPath, archPath)
             else:
-                zip.write(os.path.join(root, file))
-    zip.close()
+                z.write(os.path.join(root, f))
+    z.close()
 
 
 def createFolderPath(newPath):
@@ -234,22 +234,22 @@ def prettyTimeDiff(dtSeconds):
 
 # from:
 # http://www.5dollarwhitebox.org/drupal/node/84
-def bytes2PrettyUnitString(bytes):
-    bytes = float(bytes)
-    if bytes >= 1099511627776:
-        terabytes = bytes / 1099511627776
+def bytes2PrettyUnitString(input_bytes):
+    input_bytes = float(input_bytes)
+    if input_bytes >= 1099511627776:
+        terabytes = input_bytes / 1099511627776
         size = '%.2fTB' % terabytes
-    elif bytes >= 1073741824:
-        gigabytes = bytes / 1073741824
+    elif input_bytes >= 1073741824:
+        gigabytes = input_bytes / 1073741824
         size = '%.2fGB' % gigabytes
-    elif bytes >= 1048576:
-        megabytes = bytes / 1048576
+    elif input_bytes >= 1048576:
+        megabytes = input_bytes / 1048576
         size = '%.2fMB' % megabytes
-    elif bytes >= 1024:
-        kilobytes = bytes / 1024
+    elif input_bytes >= 1024:
+        kilobytes = input_bytes / 1024
         size = '%.2fKB' % kilobytes
     else:
-        size = '%.2fb' % bytes
+        size = '%.2fb' % input_bytes
     return size
 
 
