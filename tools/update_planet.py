@@ -84,7 +84,8 @@ if PLANET_MD5_URL:
         print("retrieving remote planet file checksum from:\n%s" % PLANET_MD5_URL)
         remote = urllib.urlopen(PLANET_MD5_URL)
         remote_checksum = remote.read().split(" ")[0]
-        print("remote checksum retrieved")
+        print("remote checksum retrieved:")
+        print(remote_checksum)
     except Exception as e:
         print("ERROR: retrieving remote md5 checksum failed")
         print(e)
@@ -94,7 +95,8 @@ if PLANET_MD5_URL:
         try:
             print("computing local md5 checksum")
             local_checksum = hashlib.md5(PLANET_PATH).hexdigest()
-            print("local md5 checksum dome")
+            print("local md5 checksum done:")
+            print(local_checksum)
         except Exception as e:
             print("local md5 checksum computation failed")
             print(e)
