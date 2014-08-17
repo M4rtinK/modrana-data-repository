@@ -23,10 +23,10 @@ continents_split_log = os.path.join(log_folder, "split_continents.log")
 print("starting modRana repository source data update")
 start=time.time()
 print("updating the planet osm file")
-planet_update_rc = os.system("./tools/update_planet.py&>%s" % planet_update_log)
+planet_update_rc = os.system("./tools/update_planet.py>%s" % planet_update_log)
 # only do the sanity check if the download was successful
 if planet_update_rc == 0:
-    planet_update_rc = os.system("./tools/sanity_check_update_planet.py&>>%s" % planet_update_log)
+    planet_update_rc = os.system("./tools/sanity_check_update_planet.py>>%s" % planet_update_log)
 dt = int(time.time() - start)
 print("planet osm file update finished in %s" % prettyTimeDiff(dt))
 if planet_update_rc > 0:
@@ -35,8 +35,8 @@ if planet_update_rc > 0:
 
 print("splitting the planet into continent sized chunks")
 start1=time.time()
-os.system("./tools/split_planet.sh&>%s" % planet_split_log)
-rc = os.system("./tools/sanity_check_split_planet.py&>>%s" % planet_split_log)
+os.system("./tools/split_planet.sh>%s" % planet_split_log)
+rc = os.system("./tools/sanity_check_split_planet.py>>%s" % planet_split_log)
 dt = int(time.time() - start1)
 print("planet splitting finished in %s" % prettyTimeDiff(dt))
 if rc > 0:
@@ -45,8 +45,8 @@ if rc > 0:
 
 print("splitting the continents into regions")
 start2=time.time()
-os.system("./tools/split_continents.py&>%s" % continents_split_log)
-rc = os.system("./tools/sanity_check_split_continents.py&>%s" % continents_split_log)
+os.system("./tools/split_continents.py>%s" % continents_split_log)
+rc = os.system("./tools/sanity_check_split_continents.py>%s" % continents_split_log)
 dt = int(time.time() - start2)
 print("continent splitting finished in %s" % prettyTimeDiff(dt))
 if rc > 0:
