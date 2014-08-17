@@ -110,3 +110,14 @@ def hash_file(file_path):
             hasher.update(buf)
             buf = f.read(block_size)
         return hasher.hexdigest()
+
+def get_files_in_folder_size(folder_path):
+    return sum(os.path.getsize(f) for f in os.listdir(folder_path) if os.path.isfile(f))
+
+def get_path_size(start_path):
+    total_size = 0
+    for dir_path, dir_names, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dir_path, f)
+            total_size += os.path.getsize(fp)
+    return total_size
