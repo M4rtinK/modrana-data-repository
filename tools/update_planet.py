@@ -41,12 +41,17 @@ def bytes2PrettyUnitString(input_bytes):
 #echo "replacing old planet file"
 #mv planet-latest-updated.pbf planet-latest.pbf
 
+
+print("updating the planet file")
+
 # remove the old planet file
 try:
+    print("removing the old planet file")
     os.remove(PLANET_PATH)
 except OSError:
     pass
 # download the new one with wget
+print("downloading new planet file")
 os.system("wget %s -p %s" % (PLANET_URL, PLANET_PATH))
 
 # some sanity checking
