@@ -36,7 +36,7 @@ if planet_update_rc > 0:
 print("splitting the planet into continent sized chunks")
 start1=time.time()
 os.system("./tools/split_planet.sh&>%s" % planet_split_log)
-rc = os.system("./tools/sanity_check_split_planet.sh&>>%s" % planet_split_log)
+rc = os.system("./tools/sanity_check_split_planet.py&>>%s" % planet_split_log)
 dt = int(time.time() - start1)
 print("planet splitting finished in %s" % prettyTimeDiff(dt))
 if rc > 0:
