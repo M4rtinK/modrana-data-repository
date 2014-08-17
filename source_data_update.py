@@ -23,9 +23,12 @@ continents_split_log = os.path.join(log_folder, "split_continents.log")
 print("starting modRana repository source data update")
 start=time.time()
 print("updating the planet osm file")
-os.system("./tools/update_planet.sh&>%s" % planet_update_log)
+planet_update_rc = os.system("./tools/update_planet.sh&>%s" % planet_update_log)
 dt = int(time.time() - start)
 print("planet osm file update finished in %s" % prettyTimeDiff(dt))
+if planet_update_rc > 0:
+    print("ERROR: planet file update failed, aborting source data update")
+    exit(1)
 
 print("splitting the planet into continent sized chunks")
 start1=time.time()
@@ -41,3 +44,4 @@ print("continent splitting finished in %s" % prettyTimeDiff(dt))
 
 dt = int(time.time() - start)
 print("source data update finished in %s" % prettyTimeDiff(dt))
+exit(0)
