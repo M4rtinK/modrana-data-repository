@@ -32,13 +32,13 @@ def bytes2PrettyUnitString(input_bytes):
     return size
 
 def hash_file(file_path):
-    with open("rb", file_path) as f:
-        hasher = hashlib.md5
-        blocksize = 65536
-        buf = f.read(blocksize)
+    with open(file_path, "rb") as f:
+        hasher = hashlib.md5()
+        block_size = 65536
+        buf = f.read(block_size)
         while len(buf) > 0:
             hasher.update(buf)
-            buf = f.read(blocksize)
+            buf = f.read(block_size)
         return hasher.digest()
 
 # osmupdate does transfer only the diffs if you provide it the right timestamp
