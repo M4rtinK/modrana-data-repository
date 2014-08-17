@@ -42,9 +42,12 @@ def bytes2PrettyUnitString(input_bytes):
 #mv planet-latest-updated.pbf planet-latest.pbf
 
 # remove the old planet file
-#os.remove(PLANET_PATH)
+try:
+    os.remove(PLANET_PATH)
+except OSError:
+    pass
 # download the new one with wget
-#os.system("wget %s -p %s" % (PLANET_URL, PLANET_PATH))
+os.system("wget %s -p %s" % (PLANET_URL, PLANET_PATH))
 
 # some sanity checking
 
