@@ -9,7 +9,7 @@ sane = True
 planet_split_size_bytes = 0
 
 try:
-    planet_split_size_bytes = utils.get_files_in_folder_size(constants.PLANET_SPLIT_FOLDER_PATH)
+    planet_split_size_bytes = utils.get_path_size(constants.PLANET_SPLIT_FOLDER_PATH)
 except OSError:
     planet_split_size_bytes = 0
 
