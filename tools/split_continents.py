@@ -13,9 +13,9 @@ import argparse
 
 # make sure relative paths work correctly
 # if the script is called from different directory
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
+ABSPATH = os.path.abspath(__file__)
+DNAME = os.path.dirname(ABSPATH)
+os.chdir(DNAME)
 
 POLY_DIR = "polys"
 
@@ -60,22 +60,22 @@ def prettyTimeDiff(dtSeconds):
 
 # from:
 # http://www.5dollarwhitebox.org/drupal/node/84
-def bytes2PrettyUnitString(bytes):
-    bytes = float(bytes)
-    if bytes >= 1099511627776:
-        terabytes = bytes / 1099511627776
+def bytes2PrettyUnitString(input_bytes):
+    input_bytes = float(input_bytes)
+    if input_bytes >= 1099511627776:
+        terabytes = input_bytes / 1099511627776
         size = '%.2fTB' % terabytes
-    elif bytes >= 1073741824:
-        gigabytes = bytes / 1073741824
+    elif input_bytes >= 1073741824:
+        gigabytes = input_bytes / 1073741824
         size = '%.2fGB' % gigabytes
-    elif bytes >= 1048576:
-        megabytes = bytes / 1048576
+    elif input_bytes >= 1048576:
+        megabytes = input_bytes / 1048576
         size = '%.2fMB' % megabytes
-    elif bytes >= 1024:
-        kilobytes = bytes / 1024
+    elif input_bytes >= 1024:
+        kilobytes = input_bytes / 1024
         size = '%.2fKB' % kilobytes
     else:
-        size = '%.2fb' % bytes
+        size = '%.2fb' % input_bytes
     return size
 
 def get_buffer_size(some_continent, region_count):
@@ -216,6 +216,5 @@ for continent in continents:
         print("return code: %d" % subprocess.call(osmosis_args))
 
 dt = time.time() - startTime
-print("splitting finished in %s (%d seconds)" %
-      prettyTimeDiff(dt), int(dt))
+print("splitting finished in %s (%d seconds)" % (prettyTimeDiff(dt), int(dt)))
 print("all done")
