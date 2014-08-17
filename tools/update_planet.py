@@ -4,8 +4,6 @@ import os
 import urllib
 import hashlib
 
-from core import utils
-
 PLANET_FOLDER = "planet"
 PLANET_FILENAME = "planet-latest.pbf"
 PLANET_PATH = os.path.join(PLANET_FOLDER, PLANET_FILENAME)
@@ -14,6 +12,24 @@ PLANET_URL = "http://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.or
 PLANET_MD5_URL = "http://ftp5.gwdg.de/pub/misc/openstreetmap/planet.openstreetmap.org/pbf/planet-latest.osm.pbf.md5"
 GiB = 1024 * 1024 * 1024
 PLANET_SANITY_THRESHOLD = 20 * GiB
+
+def bytes2PrettyUnitString(input_bytes):
+    input_bytes = float(input_bytes)
+    if input_bytes >= 1099511627776:
+        terabytes = input_bytes / 1099511627776
+        size = '%.2fTB' % terabytes
+    elif input_bytes >= 1073741824:
+        gigabytes = input_bytes / 1073741824
+        size = '%.2fGB' % gigabytes
+    elif input_bytes >= 1048576:
+        megabytes = input_bytes / 1048576
+        size = '%.2fMB' % megabytes
+    elif input_bytes >= 1024:
+        kilobytes = input_bytes / 1024
+        size = '%.2fKB' % kilobytes
+    else:
+        size = '%.2fb' % input_bytes
+    return size
 
 # osmupdate does transfer only the diffs if you provide it the right timestamp
 # but unfortunately takes too much time in the and
@@ -42,8 +58,8 @@ except OSError:
 
 # size
 print("* planet size check")
-print("planet size: %s" % utils.bytes2PrettyUnitString(planet_size_bytes))
-print("planet size sanity threshold: %s" % utils.bytes2PrettyUnitString(PLANET_SANITY_THRESHOLD))
+print("planet size: %s" % bytes2PrettyUnitString(planet_size_bytes))
+print("planet size sanity threshold: %s" % bytes2PrettyUnitString(PLANET_SANITY_THRESHOLD))
 if planet_size_bytes >= PLANET_SANITY_THRESHOLD:
     print("* planet size: OK")
 else:
