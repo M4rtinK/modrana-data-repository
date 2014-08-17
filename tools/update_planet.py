@@ -4,6 +4,7 @@ import urllib
 import hashlib
 
 PLANET_FOLDER = "planet"
+PLANET_FOLDER_PATH = os.path.abspath(PLANET_FOLDER)
 PLANET_FILENAME = "planet-latest.pbf"
 PLANET_PATH = os.path.abspath(os.path.join(PLANET_FOLDER, PLANET_FILENAME))
 # located in Europe, good speed, updated weekly
@@ -51,7 +52,7 @@ except OSError:
     pass
 # download the new one with wget
 print("downloading new planet file")
-os.system("wget %s -p %s" % (PLANET_URL, PLANET_PATH))
+os.system("wget %s -P %s" % (PLANET_URL, PLANET_FOLDER_PATH))
 
 # some sanity checking
 
