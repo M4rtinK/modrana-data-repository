@@ -56,16 +56,16 @@ os.system("wget %s -P %s" % (PLANET_URL, PLANET_FOLDER_PATH))
 
 # some sanity checking
 
-print("= sanity checking the planet file")
+print("= sanity checking the planet file =")
 sane = True
 planet_size_bytes = 0
 try:
-    os.path.getsize(PLANET_PATH)
+    planet_size_bytes = os.path.getsize(PLANET_PATH)
 except OSError:
     planet_size_bytes = 0
 
 # size
-print("* planet size check")
+print("* planet size check *")
 print("planet size: %s" % bytes2PrettyUnitString(planet_size_bytes))
 print("planet size sanity threshold: %s" % bytes2PrettyUnitString(PLANET_SANITY_THRESHOLD))
 if planet_size_bytes >= PLANET_SANITY_THRESHOLD:
@@ -75,7 +75,7 @@ else:
     sane = False
 
 # md5
-print("* md5 check")
+print("* md5 check *")
 remote_checksum = None
 local_checksum = None
 if PLANET_MD5_URL:
