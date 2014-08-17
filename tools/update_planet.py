@@ -31,6 +31,16 @@ def bytes2PrettyUnitString(input_bytes):
         size = '%.2fb' % input_bytes
     return size
 
+def hash_file(file_path):
+    with open("rb", file_path) as f:
+        hasher = hashlib.md5
+        blocksize = 65536
+        buf = f.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = f.read(blocksize)
+        return hasher.digest()
+
 # osmupdate does transfer only the diffs if you provide it the right timestamp
 # but unfortunately takes too much time in the and
 # - we can download the whole file much faster
@@ -94,7 +104,7 @@ if PLANET_MD5_URL:
     if remote_checksum:
         try:
             print("computing local md5 checksum")
-            local_checksum = hashlib.md5(PLANET_PATH).hexdigest()
+            local_checksum = hash_file(PLANET_PATH)
             print("local md5 checksum done:")
             print(local_checksum)
         except Exception as e:
