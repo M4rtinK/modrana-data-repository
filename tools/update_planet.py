@@ -39,7 +39,7 @@ def hash_file(file_path):
         while len(buf) > 0:
             hasher.update(buf)
             buf = f.read(block_size)
-        return hasher.digest()
+        return hasher.hexdigest()
 
 # osmupdate does transfer only the diffs if you provide it the right timestamp
 # but unfortunately takes too much time in the and
