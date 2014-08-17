@@ -1,10 +1,7 @@
 #!/usr/bin/python
 import os
-import urllib
-import hashlib
 
 import constants
-import utils
 
 # osmupdate does transfer only the diffs if you provide it the right timestamp
 # but unfortunately takes too much time in the and
