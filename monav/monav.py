@@ -26,10 +26,10 @@ import multiprocessing as mp
 import logging
 import time
 log = logging.getLogger("repo")
-source_log = logging.getLogger('repo.source')
-process_log = logging.getLogger('repo.process')
-package_log = logging.getLogger('repo.package')
-publish_log = logging.getLogger('repo.publish')
+source_log = logging.getLogger('repo.source.monav')
+process_log = logging.getLogger('repo.process.monav')
+package_log = logging.getLogger('repo.package.monav')
+publish_log = logging.getLogger('repo.publish.monav')
 
 from core.package import Package
 from core.repo import Repository
@@ -70,13 +70,13 @@ class MonavRepository(Repository):
             self._downloadData(sourceQueue)
 
     def _loadLocalData(self, sourceQueue, sourceFolder):
-        source_log.info('monav local data loader: starting')
+        source_log.info('local source data loader starting')
         tempPath = self.getTempPath()
         # store all PBF files to a list, so we
         # can print some stats on them & process them
         files = []
         accumulatedSize = 0
-        source_log.info("monav loader: loading data from local folder:")
+        source_log.info("loading data from local folder:")
         source_log.info("%s", os.path.abspath(sourceFolder))
         for root, dirs, dirFiles in os.walk(sourceFolder):
             for f in dirFiles:
@@ -87,7 +87,7 @@ class MonavRepository(Repository):
                     files.append( (filePath, fileSize) )
         fileCount = len(files)
 
-        source_log.info("monav loader: found %d PBF files together %s in size",
+        source_log.info("found %d PBF files together %s in size",
             fileCount, utils.bytes2PrettyUnitString(accumulatedSize)
         )
 
@@ -106,16 +106,16 @@ class MonavRepository(Repository):
                 pack = MonavPackage(metadata)
                 packId += 1
                 sizeString = utils.bytes2PrettyUnitString(fSize)
-                source_log.info('monav loader: loading %d/%d: %s (%s)', packId, fileCount, pack.getName(), sizeString)
+                source_log.info('loading %d/%d: %s (%s)', packId, fileCount, pack.getName(), sizeString)
                 pack.load()
                 sourceQueue.put(pack)
             except Exception, e:
-                source_log.exception('monav loader: loading PBF file failed: %s', f)
+                source_log.exception('loading PBF file failed: %s', f)
                 #source_log.error(e)
                 #traceback.print_exc(file=sys.stdout)
                 #source_log.exception("traceback:")
 
-        source_log.info('monav loader: all source files loaded')
+        source_log.info('all source files loaded')
 
     def _downloadData(self, sourceQueue):
         tempPath = self.getTempPath()
@@ -126,7 +126,7 @@ class MonavRepository(Repository):
             urlCount = 0
         f = open(csvFilePath, "r")
         reader = csv.reader(f)
-        source_log.info('monav downloader: starting')
+        source_log.info('source data downloader starting')
         # read all URLs to a list
         urls = []
         for row in reader:
@@ -135,13 +135,13 @@ class MonavRepository(Repository):
         f.close()
 
         if self.manager.args.monav_dont_sort_urls:
-            source_log.info('monav loader: URL sorting disabled')
+            source_log.info('URL sorting disabled')
             sortedUrls = map(lambda x: (0, x), urls)
         else:
             # sort the URLs by size
-            source_log.info('monav loader: sorting URLs by size in ascending order')
+            source_log.info('sorting URLs by size in ascending order')
             sortedUrls, totalSize = utils.sortUrlsBySize(urls)
-            source_log.info('monav loader: total download size: %s', utils.bytes2PrettyUnitString(totalSize))
+            source_log.info('total download size: %s', utils.bytes2PrettyUnitString(totalSize))
 
         # download all the URLs
         packId = 0
@@ -161,16 +161,16 @@ class MonavRepository(Repository):
                     sizeString = "unknown size"
                 else:
                     sizeString = utils.bytes2PrettyUnitString(size)
-                source_log.info('monav loader: downloading %d/%d: %s (%s)', packId, urlCount, pack.getName(), sizeString)
+                source_log.info('downloading %d/%d: %s (%s)', packId, urlCount, pack.getName(), sizeString)
                 pack.load()
                 sourceQueue.put(pack)
             except Exception, e:
-                source_log.exception('monav loader: loading url failed: %s', url)
+                source_log.exception('loading url failed: %s', url)
                 #source_log.info(e)
                 #traceback.print_exc(file=sys.stdout)
                 #source_log.exception("traceback:")
 
-        source_log.info('monav loader: all downloads finished')
+        source_log.info('all downloads finished')
 
     def _processPackage(self, sourceQueue, packQueue):
         """process OSM data in the PBF format into Monav routing data"""
@@ -198,7 +198,7 @@ class MonavRepository(Repository):
             sourceQueue.task_done()
             # forward the package to the packaging pool
             packQueue.put(package)
-        process_log.info('monav processing: shutting down')
+        process_log.info('processing shutting down')
 
     def _packagePackage(self, packQueue, publishQueue):
         """create a compressed TAR archive from the Monav routing data
@@ -215,12 +215,12 @@ class MonavRepository(Repository):
             packQueue.task_done()
             # forward the package to the publishing process
             publishQueue.put(package)
-        package_log.info('monav packaging: shutting down')
+        package_log.info('packaging shutting down')
 
     def _publishPackage(self, publishQueue):
         """tak the compressed TARs and publish them to the modRana public folder
         and update the repository manifest accordingly"""
-        publish_log.info('monav publisher: starting')
+        publish_log.info('publisher starting')
         while True:
             package = publishQueue.get()
             if package == repo.SHUTDOWN_SIGNAL:
@@ -229,7 +229,7 @@ class MonavRepository(Repository):
             publish_log.info('publishing %s' % package.getName())
             package.publish(self.getPublishPath())
             publishQueue.task_done()
-        publish_log.info('monav publisher: shutting down')
+        publish_log.info('publisher shutting down')
 
 class MonavPackage(Package):
     def __init__(self, metadata):
