@@ -59,122 +59,156 @@ class Manager(object):
 
     def __init__(self):
         # load the configuration file
-        self.args = startup.Startup().getArgs()
-        self.conf = ConfigObj(self.getConfigPath())
+        self._args = startup.Startup().getArgs()
+        self._conf = ConfigObj(self.config_path)
+
         # initialize logging
-        repo_log.init_logging(self.args.log_folder)
+        repo_log.init_logging(self._args.log_folder)
 
         # for now, update all repositories
         self.updateAll()
 
     def updateAll(self):
         log.info("## starting repository update ##")
-        log.info ((self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
-        log.info("# CPU count: %d, proc. pool: %d, pack pool: %d" % (
-        self.getCpuCount(), self.getProcessingPoolSize(), self.getPackagingPoolSize()))
-        log.info("# queues: source: %d, pack: %d, publish: %d" % (
-        self.getSourceQueueSize(), self.getPackagingQueueSize(), self.getPublishQueueSize()))
-
+        start = time.time()
+        #log.info("%d,%d,%d", self.cpu_count,  self.processing_pool_size, self.packaging_pool_size)
+        log.info("# CPU count: %d, proc. pool: %d, pack pool: %d",
+        self.cpu_count,
+        self.processing_pool_size,
+        self.packaging_pool_size)
+        log.info("# queues: source: %d, pack: %d, publish: %d",
+        self.source_queue_size,
+        self.packaging_queue_size,
+        self.publish_queue_size)
         log.info("## updating Monav repository" )
-        log.info('# monav preprocessor threads: %d' % self.getMonavPreprocessorThreads())
-        log.info('# max parallel pp. per package: %d' % self.getMonavParallelThreads())
-        ppThreshold = self.getMonavParallelThreshold()
+        log.info('# monav preprocessor threads: %d', self.monav_preprocessor_threads)
+        log.info('# max parallel pp. per package: %d', self.monav_parallel_threads)
+        ppThreshold = self.monav_parallel_threshold
         if ppThreshold:
             log.info('# parallel pp. threshold: %d MB' % ppThreshold)
-        start = time.time()
+        start_monav = time.time()
         monav = MonavRepository(self)
         monav.update()
-        dt = int(time.time() - start)
-        if dt > 60:
-            prettyTime = "%s (%d s)" % (utils.prettyTimeDiff(dt), dt)
+        # log how long the Monav update took
+        dt_monav = int(time.time() - start_monav)
+        if dt_monav > 60:
+            prettyTime = "%s (%d s)" % (utils.prettyTimeDiff(dt_monav), dt_monav)
             # show seconds for exact benchmarking once pretty time
             # switches to larger units
         else:
-            prettyTime = utils.prettyTimeDiff(dt)
+            prettyTime = utils.prettyTimeDiff(dt_monav)
         log.info("## Monav repository updated in %s " % prettyTime)
+
+        log.info("## Summary:")
+        log.info("## Monav repository updated in %s (%d s)" %
+                 (utils.prettyTimeDiff(dt_monav), dt_monav)
+        )
+
+        # log how long the repository update took
+        dt = int(time.time() - start)
+        if dt > 60:
+            prettyTime = "%s (%d s)" % (utils.prettyTimeDiff(dt), dt)
+        else:
+            prettyTime = utils.prettyTimeDiff(dt)
+        log.info("## Repository updated in %s " % prettyTime)
 
         log.info("## repository update finished ##")
 
-    def getConfig(self):
+    @property
+    def config(self):
         """return parsed config file"""
-        return self.conf
+        return self._conf
 
-    def getArgs(self):
+    @property
+    def args(self):
         """return the CLI options dictionary"""
-        return self.args
+        return self._args
 
     # Configuration variable wrappers
-
-    def getConfigPath(self):
+    @property
+    def config_path(self):
         """get configuration file path"""
         if self.args.c is not None:
             return self.args.c
         else:
             return repo.CONFIG_FILE_PATH
 
-    def getTempPath(self):
+    @property
+    def temp_path(self):
         """temporary folder path wrapper"""
         return self._wrapVariable(self.args.temp_folder, "temporary_folder", repo.TEMP_PATH)
 
-    def getRepoPath(self):
+    @property
+    def repo_path(self):
         """repository folder path wrapper"""
         return self._wrapVariable(self.args.repository_folder, "repository_folder", repo.RESULTS_PATH)
 
-    def getDataSourceType(self):
+    @property
+    def data_source_type(self):
         """data source type wrapper"""
         return self._wrapVariable(self.args.data_source, "data_source", repo.DEFAULT_DATA_SOURCE)
 
+    @property
     @integer
-    def getCpuCount(self):
+    def cpu_count(self):
         """cpu count wrapper"""
         return self._wrapVariable(self.args.cpu_count, "cpu_count", mp.cpu_count())
 
+    @property
     @integer
-    def getSourceQueueSize(self):
+    def source_queue_size(self):
         """source queue size wrapper"""
         return self._wrapVariable(self.args.source_queue_size, "source_queue_size", repo.QUEUE_SIZE)
 
+    @property
     @integer
-    def getPackagingQueueSize(self):
+    def packaging_queue_size(self):
         """packaging queue size wrapper"""
         return self._wrapVariable(self.args.packaging_queue_size, "packaging_queue_size", repo.QUEUE_SIZE)
 
+    @property
     @integer
-    def getPublishQueueSize(self):
+    def publish_queue_size(self):
         """publishing queue size wrapper"""
         return self._wrapVariable(self.args.publish_queue_size, "publish_queue_size", repo.QUEUE_SIZE)
 
+    @property
     @integer
-    def getProcessingPoolSize(self):
+    def processing_pool_size(self):
         """processing pool size wrapper"""
         return self._wrapVariable(self.args.processing_pool_size, "processing_pool_size", mp.cpu_count())
 
+    @property
     @integer
-    def getPackagingPoolSize(self):
+    def packaging_pool_size(self):
         """packaging pool size wrapper"""
         return self._wrapVariable(self.args.packaging_pool_size, "packaging_pool_size", mp.cpu_count())
 
     # Monav variable wrappers
 
+    @property
     @string
-    def getMonavPreprocessorPath(self):
+    def monav_preprocessor_path(self):
         """Monav preprocessor path wrapper"""
         return self._wrapVariable(self.args.monav_preprocessor_path, "monav_preprocessor_path", PREPROCESSOR_PATH)
 
+    @property
     @integer
-    def getMonavPreprocessorThreads(self):
+    def monav_preprocessor_threads(self):
         """Monav preprocessor thread count wrapper"""
-        cpuCount = int(self.getCpuCount())
+        cpu_count = int(self.cpu_count)
         return self._wrapVariable(self.args.monav_preprocessor_threads, "monav_preprocessor_threads",
-                                  max(1, cpuCount / 4))
+                                  max(1, cpu_count / 4))
 
+    @property
     @integer
-    def getMonavParallelThreads(self):
+    def monav_parallel_threads(self):
         """Monav preprocessor parallel thread count wrapper
         -> how many preprocessors would be run in parallel"""
         return self._wrapVariable(self.args.monav_pool_size, "monav_parallel_threads", 1)
 
-    def getMonavParallelThreshold(self):
+    @property
+    def monav_parallel_threshold(self):
         """Monav preprocessor parallel run threshold wrapper
         -> don't run monav preprocessors in parallel is source data is larger than threshold"""
         result = self._wrapVariable(self.args.monav_pool_threshold, "monav_parallel_threshold", None)
@@ -183,8 +217,9 @@ class Manager(object):
         else:
             return result
 
+    @property
     @string
-    def getMonavCSVPath(self):
+    def monav_csv_path(self):
         """path to a CSV file with links to PBF extracts for Monav wrapper"""
         return self._wrapVariable(self.args.monav_csv_path, "monav_csv_path", SOURCE_DATA_URLS_CSV)
 
@@ -192,7 +227,7 @@ class Manager(object):
         if option is not None:
             return option
         else:
-            return self.conf.get(confKey, default)
+            return self.config.get(confKey, default)
 
 
 if __name__ == '__main__':

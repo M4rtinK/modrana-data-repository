@@ -5,7 +5,8 @@
 #----------------------------------------------------------------------------
 # Copyright 2012, Martin Kolman
 #
-# This program is free software: you can redistribute it and/or modify
+# This program is free softwa
+# re: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -49,76 +50,102 @@ DEFAULT_DATA_SOURCE = DATA_SOURCE_DOWNLOAD
 
 class Repository(object):
     def __init__(self, manager):
-        self.manager = manager
+        self._manager = manager
 
         # the source queue is fed by the data loader
-        self.sourceQueue = mp.JoinableQueue(manager.getSourceQueueSize())
+        self._source_queue = mp.JoinableQueue(manager.source_queue_size)
         # the packaging queue is fed by the processing processes
-        self.packagingQueue = mp.JoinableQueue(manager.getPackagingQueueSize())
+        self._packaging_queue = mp.JoinableQueue(manager.packaging_queue_size)
         # the publishing queue is fed by the packaging processes
-        self.publishQueue = mp.JoinableQueue(manager.getPublishQueueSize())
+        self._publish_queue = mp.JoinableQueue(manager.publish_queue_size)
 
         # loads data for processing
-        self.loadingProcess = None
+        self._loading_process = None
         # publishes packages to online repository
-        self.publishingProcess = None
+        self._publishing_process = None
 
-    def getName(self):
+    @property
+    def name(self):
         """return a pretty name for the repository"""
-        pass
+        raise NotImplementedError
 
-    def getFolderName(self):
+    @property
+    def folder_name(self):
         """return folder name for the repository"""
-        pass
+        raise NotImplementedError
+
+    @property
+    def source_queue(self):
+        return self._source_queue
+
+    @property
+    def packaging_queue(self):
+        return self._packaging_queue
+
+    @property
+    def publish_queue(self):
+        return self._publish_queue
+
+    @property
+    def loading_process(self):
+        return self._loading_process
+
+    @property
+    def publishing_process(self):
+        return self._loading_process
+
+    @property
+    def manager(self):
+        return self._manager
 
     def update(self):
         # run pre-update
-        if self._preUpdate() == False:
+        if self._pre_update() == False:
             log.error('repository pre-update failed')
             return False
             # start the loading process
-        tempPath = self.getTempPath()
-        self.loadingProcess = mp.Process(target=self._loadData, args=(self.sourceQueue,))
-        self.loadingProcess.daemon = True
-        self.loadingProcess.start()
+        tempPath = self.temp_path
+        self._loading_process = mp.Process(target=self._load_data)
+        self._loading_process.daemon = True
+        self._loading_process.start()
         # start the processing processes
-        for i in range(self.getProcessingPoolSize()):
-            p = mp.Process(target=self._processPackage, args=(self.sourceQueue, self.packagingQueue))
+        for i in range(self.processing_pool_size):
+            p = mp.Process(target=self._process_package)
             p.daemon = False
             p.start()
             # start the packaging processes
-        for i in range(self.getPackagingPoolSize()):
-            p = mp.Process(target=self._packagePackage, args=(self.packagingQueue, self.publishQueue))
+        for i in range(self.packaging_pool_size):
+            p = mp.Process(target=self._package_package)
             p.daemon = True
             p.start()
             # start the publishing process
-        self.publishingProcess = mp.Process(target=self._publishPackage, args=(self.publishQueue,), )
-        self.publishingProcess.daemon = True
-        self.publishingProcess.start()
+        self._publishing_process = mp.Process(target=self._publish_package)
+        self._publishing_process.daemon = True
+        self._publishing_process.start()
 
         # start a method that first joins the first process, once it stops it joins
         # all the queues in sequence and feeds them with shutdown commands corresponding to the number of
         # worker processes corresponding to the given Queue
         # -> this shut shut-down the whole operation in sequence on the individual stages dry up
-        self._terminateOnceDone()
+        self._terminate_once_done()
 
         # run post-update
-        if self._postUpdate() == False:
+        if self._post_update() == False:
             log.error('repository post-update failed')
             return False
         return True
 
-    def _terminateOnceDone(self):
+    def _terminate_once_done(self):
         """terminate processes through their input queue
         once the previous stage runs out of work"""
         # first wait fo the loader to finish
-        self.loadingProcess.join()
+        self.loading_process.join()
 
         # then shut down all the stages in sequence as they run out of work
         stages = [
-            (self.sourceQueue, self.getProcessingPoolSize()),
-            (self.packagingQueue, self.getPackagingPoolSize()),
-            (self.publishQueue, 1)
+            (self.source_queue, self.processing_pool_size),
+            (self.packaging_queue, self.packaging_pool_size),
+            (self.publish_queue, 1)
         ]
 
         for queue, processCount in stages:
@@ -130,53 +157,56 @@ class Repository(object):
                 # wait for the shutdown signals to be processed
             queue.join()
 
-    def getProcessingPoolSize(self):
+    @property
+    def processing_pool_size(self):
         """returns the number of threads to start in the data processing pool
         NOTE: this number should not change once the processing threads are started,
         as it might prevent a clean shutdown"""
-        return self.manager.getProcessingPoolSize()
+        return self._manager.processing_pool_size
 
-    def getPackagingPoolSize(self):
+    @property
+    def packaging_pool_size(self):
         """returns the number of threads to start in the data packaging pool
         NOTE: this number should not change once the packaging threads are started,
         as it might prevent a clean shutdown"""
-        return self.manager.getPackagingPoolSize()
+        return self._manager.packaging_pool_size
 
-    def _preUpdate(self):
+    def _pre_update(self):
         """this method is called before starting the repository update"""
         pass
 
-    def _postUpdate(self):
+    def _post_update(self):
         """this method is called after finishing the repository update """
         pass
 
     ## Multiprocessing tasks ##
-    def _loadData(self, sourceQueue):
+    def _load_data(self):
         pass
 
-    def _processPackage(self, sourceQueue, packQueue):
+    def _process_package(self):
         pass
 
-    def _packagePackage(self, packQueue, publishQueue):
+    def _package_package(self):
         pass
 
-    def _publishPackage(self, publishQueue):
+    def _publish_package(self):
         pass
 
     ## Paths ##
-
-    def getTempPath(self):
+    @property
+    def temp_path(self):
         return os.path.join(
-            self.manager.getTempPath(),
-            self.getFolderName())
+            self._manager.temp_path,
+            self.folder_name)
 
-    def getPublishPath(self):
+    @property
+    def publish_path(self):
         return os.path.join(
-            self.manager.getRepoPath(),
-            self.getFolderName())
+            self._manager.repo_path,
+            self.folder_name)
 
     ## Source data URLs ##
-    def _getSourceUrlType(self):
+    def _get_source_url_type(self):
         # TODO: config file switch for setting this,
         # so that using the URL verbatim is possible
         return GEOFABRIK_URL

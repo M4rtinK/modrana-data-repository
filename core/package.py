@@ -30,36 +30,56 @@ class Package(object):
     DONE = 3
 
     def __init__(self):
-        self.name = None
-        self.size = None
+        self._name = None
+        self._size = None
         # this timestamp relates to when
         # the source data were last updated
-        self.sourceTimestamp = None
+        self.source_timestamp = None
         # repository path suffix
         # ex.: europe/france/ for French regions
-        self.repoSubPath = ""
+        self._repo_sub_path = ""
         # current state of package processing
-        self.state = None
+        self._state = None
         # combined time spend on package processing in seconds
-        self.processingTime = 0
+        self._processing_time = 0
         # current loading progress 0.0 = 0%, 1.0 = 100%
-        self.loadingProgress = 0.0
+        self._loading_progress = 0.0
+        # a path to the source data file
+        self._source_file_path = None
+        # a temporary working directory for this package only
+        self._temp_path = None
 
-    def getName(self):
-        return self.name
+    @property
+    def name(self):
+        return self._name
 
-    def getState(self):
-        return self.state
+    @property
+    def size(self):
+        return  self._size
 
-    def getLoadingProgress(self):
-        return self.loadingProgress
+    @property
+    def state(self):
+        return self._state
+
+    @property
+    def loading_progress(self):
+        return self._loading_progress
 
     def _addProcessingTime(self, pTime):
-        self.processingTime += pTime
+        self._processing_time += pTime
 
-    def getProcessingTime(self):
+    @property
+    def processing_time(self):
         """return how long this package took to process so far in seconds"""
-        return self.processingTime
+        return self._processing_time
+
+    @property
+    def source_file_path(self):
+        return self._source_file_path
+
+    @property
+    def temp_path(self):
+        return self._temp_path
 
     def _timeit(self, fn):
         def wrapped():
@@ -85,13 +105,13 @@ class Package(object):
         """publish the data to the online repository"""
         pass
 
-    def getResults(self):
+    def get_results(self):
         """return a list file-paths pointing to results
         of the processing & packaging steps that now need to be published
         """
         pass
 
-    def clearAll(self):
+    def clear_all(self):
         """clear all data created during package processing
         -> this currently means source & temporary data,
         not results, if they were already published"""

@@ -44,72 +44,75 @@ PREPROCESSOR_PATH = "monav-preprocessor"
 class MonavRepository(Repository):
     def __init__(self, manager):
         Repository.__init__(self, manager)
-        self.preprocessorPath = manager.getMonavPreprocessorPath()
-        self.manager = manager
+        self._preprocessor_path = manager.monav_preprocessor_path
 
-    def getName(self):
+    @property
+    def name(self):
         return "Monav"
 
-    def getFolderName(self):
+    @property
+    def folder_name(self):
         return "monav"
 
-    def _preUpdate(self):
+    def _pre_update(self):
         """make sure temporary & publishing folders exist"""
-        if utils.createFolderPath(self.getTempPath()) == False:
+        if utils.createFolderPath(self.temp_path) == False:
             return False
-        if utils.createFolderPath(self.getPublishPath()) == False:
+        if utils.createFolderPath(self.publish_path) == False:
             return False
         return True
 
-    def _loadData(self, sourceQueue):
+    def _load_data(self):
         # check from where to load data
         if self.manager.args.data_source == repo.DATA_SOURCE_FOLDER:
-            sourceFolder = self.manager.args.source_data_folder
-            self._loadLocalData(sourceQueue, sourceFolder)
+            source_folder = self.manager.args.source_data_folder
+            self._load_local_source_data(source_folder)
         else:  # download data
-            self._downloadData(sourceQueue)
+            self._download_source_data()
 
-    def _loadLocalData(self, sourceQueue, sourceFolder):
+    def _load_local_source_data(self, source_folder):
         source_log.info('local source data loader starting')
-        tempPath = self.getTempPath()
         # store all PBF files to a list, so we
         # can print some stats on them & process them
         files = []
-        accumulatedSize = 0
+        accumulated_size = 0
         source_log.info("loading data from local folder:")
-        source_log.info("%s", os.path.abspath(sourceFolder))
-        for root, dirs, dirFiles in os.walk(sourceFolder):
+        source_log.info("%s", os.path.abspath(source_folder))
+        for root, dirs, dirFiles in os.walk(source_folder):
             for f in dirFiles:
                 if os.path.splitext(f)[1] == ".pbf":
-                    filePath = os.path.join(root, f)
-                    fileSize = os.path.getsize(filePath)
-                    accumulatedSize += fileSize
-                    files.append( (filePath, fileSize) )
-        fileCount = len(files)
+                    file_path = os.path.join(root, f)
+                    file_size = os.path.getsize(file_path)
+                    accumulated_size += file_size
+                    files.append( (file_path, file_size) )
+        file_count = len(files)
 
         source_log.info("found %d PBF files together %s in size",
-            fileCount, utils.bytes2PrettyUnitString(accumulatedSize)
+            file_count, utils.bytes2PrettyUnitString(accumulated_size)
         )
+        return files
 
+    def _generate_monav_packages(self, source_folder, file_size_list):
         # generate a package for every PBF file
-        packId = 0
-        for f, fSize in files:
+        pack_id = 0
+        for f, f_size in file_size_list:
             try:
                 metadata = {
-                    'packId': packId,
-                    'tempPath': tempPath,
-                    'helperPath': self.getFolderName(),
-                    'preprocessorPath': self.preprocessorPath,
+                    'packId': pack_id,
+                    'tempPath': self.temp_path,
+                    'helperPath': self.folder_name,
+                    'preprocessorPath': self._preprocessor_path,
                     'filePath' : f,
-                    'filePathPrefix' : sourceFolder
+                    'filePathPrefix' : source_folder
                 }
                 pack = MonavPackage(metadata)
-                packId += 1
-                sizeString = utils.bytes2PrettyUnitString(fSize)
-                source_log.info('loading %d/%d: %s (%s)', packId, fileCount, pack.getName(), sizeString)
+                pack_id += 1
+                size_string = utils.bytes2PrettyUnitString(f_size)
+                file_count = len(file_size_list)
+                source_log.info('loading %d/%d: %s (%s)', pack_id, file_count, pack.name(), size_string)
                 pack.load()
-                sourceQueue.put(pack)
-            except Exception, e:
+                self.source_queue.put(pack)
+            except Exception:
                 source_log.exception('loading PBF file failed: %s', f)
                 #source_log.error(e)
                 #traceback.print_exc(file=sys.stdout)
@@ -117,14 +120,13 @@ class MonavRepository(Repository):
 
         source_log.info('all source files loaded')
 
-    def _downloadData(self, sourceQueue):
-        tempPath = self.getTempPath()
-        csvFilePath = self.manager.getMonavCSVPath()
+    def _download_source_data(self):
+        csv_file_path = self.manager.monav_csv_path
         # get a CSV line count to get approximate repository update progress
-        urlCount = utils.countCSVLines(csvFilePath)
+        urlCount = utils.countCSVLines(csv_file_path)
         if not urlCount: # just to be sure
             urlCount = 0
-        f = open(csvFilePath, "r")
+        f = open(csv_file_path, "r")
         reader = csv.reader(f)
         source_log.info('source data downloader starting')
         # read all URLs to a list
@@ -136,35 +138,35 @@ class MonavRepository(Repository):
 
         if self.manager.args.monav_dont_sort_urls:
             source_log.info('URL sorting disabled')
-            sortedUrls = map(lambda x: (0, x), urls)
+            sorted_urls = map(lambda x: (0, x), urls)
         else:
             # sort the URLs by size
             source_log.info('sorting URLs by size in ascending order')
-            sortedUrls, totalSize = utils.sortUrlsBySize(urls)
+            sorted_urls, totalSize = utils.sortUrlsBySize(urls)
             source_log.info('total download size: %s', utils.bytes2PrettyUnitString(totalSize))
 
         # download all the URLs
-        packId = 0
-        for size, url in sortedUrls:
+        pack_id = 0
+        for size, url in sorted_urls:
             try:
                 metadata = {
-                    'packId': packId,
-                    'tempPath': tempPath,
-                    'helperPath': self.getFolderName(),
-                    'preprocessorPath': self.preprocessorPath,
+                    'packId': pack_id,
+                    'tempPath': self.temp_path,
+                    'helperPath': self.folder_name,
+                    'preprocessorPath': self._preprocessor_path,
                     'url' : url,
-                    'urlType': self._getSourceUrlType()
+                    'urlType': self._get_source_url_type()
                 }
                 pack = MonavPackage(metadata)
-                packId += 1
+                pack_id+= 1
                 if size is None:
-                    sizeString = "unknown size"
+                    size_string = "unknown size"
                 else:
-                    sizeString = utils.bytes2PrettyUnitString(size)
-                source_log.info('downloading %d/%d: %s (%s)', packId, urlCount, pack.getName(), sizeString)
+                    size_string = utils.bytes2PrettyUnitString(size)
+                source_log.info('downloading %d/%d: %s (%s)', pack_id, urlCount, pack.name(), size_string)
                 pack.load()
-                sourceQueue.put(pack)
-            except Exception, e:
+                self.source_queue.put(pack)
+            except Exception:
                 source_log.exception('loading url failed: %s', url)
                 #source_log.info(e)
                 #traceback.print_exc(file=sys.stdout)
@@ -172,12 +174,12 @@ class MonavRepository(Repository):
 
         source_log.info('all downloads finished')
 
-    def _processPackage(self, sourceQueue, packQueue):
+    def _process_package(self):
         """process OSM data in the PBF format into Monav routing data"""
         while True:
-            package = sourceQueue.get()
+            package = self.source_queue.get()
             if package == repo.SHUTDOWN_SIGNAL:
-                sourceQueue.task_done()
+                self.source_queue.task_done()
                 break
                 # process the data
 
@@ -187,79 +189,79 @@ class MonavRepository(Repository):
             # the computation quite a bit
             # * with the default queue size (10), this means worst-case
             # over-commit of about 2.5 for Monav threads (+ max 10 active packaging threads)
-            monavThreads = self.manager.getMonavPreprocessorThreads()
+            monavThreads = self.manager.monav_preprocessor_threads
             # how many preprocessors can be run at once
-            maxParallelPreprocessors = self.manager.getMonavParallelThreads()
+            maxParallelPreprocessors = self.manager.monav_parallel_threads
             # source file size threshold (in MB) for running the preprocessors in parallel
-            parallelThreshold = self.manager.getMonavParallelThreshold()
+            parallelThreshold = self.manager.monav_parallel_threshold
             # start packaging
             package.process((monavThreads, maxParallelPreprocessors), parallelThreshold)
             # signal task done
-            sourceQueue.task_done()
+            self.source_queue.task_done()
             # forward the package to the packaging pool
-            packQueue.put(package)
+            self.packaging_queue.put(package)
         process_log.info('processing shutting down')
 
-    def _packagePackage(self, packQueue, publishQueue):
+    def _package_package(self):
         """create a compressed TAR archive from the Monav routing data
         -> three packages (car, pedestrian, bike) are generated and compressed
         sequentially to three separate archives"""
         while True:
-            package = packQueue.get()
+            package = self.packaging_queue.get()
             if package == repo.SHUTDOWN_SIGNAL:
-                packQueue.task_done()
+                self.packaging_queue.task_done()
                 break
                 # packaging
             package.package()
             # signal task done
-            packQueue.task_done()
+            self.packaging_queue.task_done()
             # forward the package to the publishing process
-            publishQueue.put(package)
+            self.publish_queue.put(package)
         package_log.info('packaging shutting down')
 
-    def _publishPackage(self, publishQueue):
+    def _publish_package(self):
         """tak the compressed TARs and publish them to the modRana public folder
         and update the repository manifest accordingly"""
         publish_log.info('publisher starting')
         while True:
-            package = publishQueue.get()
+            package = self.publish_queue.get()
             if package == repo.SHUTDOWN_SIGNAL:
-                publishQueue.task_done()
+                self.publish_queue.task_done()
                 break
-            publish_log.info('publishing %s' % package.getName())
-            package.publish(self.getPublishPath())
-            publishQueue.task_done()
+            publish_log.info('publishing %s', package.name)
+            package.publish(self.publish_path)
+            self.publish_queue.task_done()
         publish_log.info('publisher shutting down')
 
 class MonavPackage(Package):
     def __init__(self, metadata):
         Package.__init__(self)
-        self.url = metadata.get('url')
-        urlType = metadata.get('urlType')
-        self.filePath = metadata.get('filePath')
-        self.filePathPrefix = metadata.get('filePathPrefix')
-        self.helperPath = metadata.get('helperPath') # for accessing the base.ini file for Monav preprocessor
-        self.preprocessorPath = metadata['preprocessorPath']
+        self._url = metadata.get('url')
+        url_type = metadata.get('urlType')
+        self._source_file_path = metadata.get('filePath')
+        self._file_path_prefix = metadata.get('filePathPrefix')
+        self._helper_path = metadata.get('helperPath') # for accessing the base.ini file for Monav preprocessor
+        self._preprocessor_path = metadata['preprocessorPath']
         # split to repoSubPath & filename
         # -> repoSubPath = continent/country/etc.
-        if self.filePath:
-            self.repoSubPath, self.filename, self.name = utils.pbfPath2repoPathFilenameName(
-                self.filePath, self.filePathPrefix
+        if self.source_file_path:
+            self._repo_sub_path, self._filename, self._name = utils.pbfPath2repoPathFilenameName(
+                self.source_file_path, self._file_path_prefix
             )
-            self.sourceDataPath = self.filePath
+            self._source_data_path = self.source_file_path
         else: # url
-            self.repoSubPath, self.filename, self.name = utils.url2repoPathFilenameName(self.url, urlType)
-            self.sourceDataPath = os.path.join(self.tempStoragePath, self.filename)
+            self._repo_sub_path, self._filename, self._name = utils.url2repoPathFilenameName(self._url, url_type)
+            self._source_data_path = os.path.join(self._temp_storage_path, self._filename)
         # a temporary working directory for this package only (unique id prefix)
-        self.tempPath = os.path.join(metadata['tempPath'], str(metadata['packId']))
+        self._temp_path = os.path.join(metadata['tempPath'], str(metadata['packId']))
         # a subdirectory named after the package
-        self.tempStoragePath = os.path.join(self.tempPath, self.name)
+        self._temp_storage_path = os.path.join(self._temp_path, self.name)
 
         # paths to resulting data files
         self.results = []
 
     def load(self):
-        if self.filePath:
+        if self.source_file_path:
             self._loadFromFile()
         else:  # url
             self._download()
@@ -267,129 +269,128 @@ class MonavPackage(Package):
     def _loadFromFile(self):
         """Use local PBF file as data source"""
         try:
-            if os.path.exists(self.sourceDataPath):
-                if os.path.exists(self.tempStoragePath):
-                    source_log.info('removing old temporary folder %s', self.tempStoragePath)
-                    shutil.rmtree(self.tempStoragePath)
-                utils.createFolderPath(self.tempStoragePath)
+            if os.path.exists(self._source_data_path):
+                if os.path.exists(self._temp_storage_path):
+                    source_log.info('removing old temporary folder %s', self._temp_storage_path)
+                    shutil.rmtree(self._temp_storage_path)
+                utils.createFolderPath(self._temp_storage_path)
                 return True
-        except Exception, e:
+        except Exception:
             message = 'monav package: OSM PBF loading failed\n'
             message += 'name: %s\n' % self.name
-            message += 'filePath: %s\n' % self.filePath
-            message += 'storage path: %s' % self.sourceDataPath
+            message += 'filePath: %s\n' % self.source_file_path
+            message += 'storage path: %s' % self._source_data_path
             source_log.exception(message)
-            #traceback.print_exc(file=sys.stdout)
             return False
 
     def _download(self):
         """download PBF extract from the URL and store it locally"""
         try:
-            if os.path.exists(self.sourceDataPath):
+            if os.path.exists(self._source_data_path):
                 return
                 # TODO: DEBUG, remove this
             else:
-                if os.path.exists(self.tempStoragePath):
-                    source_log.info('removing old folder %s' % self.tempStoragePath)
-                    shutil.rmtree(self.tempStoragePath)
-                utils.createFolderPath(self.tempStoragePath)
+                if os.path.exists(self._temp_storage_path):
+                    source_log.info('removing old folder %s' % self._temp_storage_path)
+                    shutil.rmtree(self._temp_storage_path)
+                utils.createFolderPath(self._temp_storage_path)
                 #        f = open(self.sourceDataPath, "w")
                 #        request = urllib2.urlopen(self.url)
-                urllib.urlretrieve(self.url, self.sourceDataPath)
+                urllib.urlretrieve(self._url, self._source_data_path)
                 #        f.write(request.read())
                 #        f.close()
                 return True
-        except Exception, e:
+        except Exception:
             message = 'monav package: OSM PBF download failed\n'
             message += 'name: %s\n' % self.name
-            message += 'URL: %s\n' % self.url
-            message += 'storage path: %s' % self.sourceDataPath
+            message += 'URL: %s\n' % self._url
+            message += 'storage path: %s' % self._source_data_path
             source_log.exception(message)
             # print(e)
             # traceback.print_exc(file=sys.stdout)
             return False
 
-    def process(self, threads=(1, 1), parallelThreshold=None):
+    def process(self, threads=(1, 1), parallel_threshold=None):
         """process the PBF extract into Monav routing data"""
-        monavThreads, maxParallelPreprocessors = threads
+        monav_threads, max_parallel_preprocessors = threads
         # check the parallel threshold
-        if parallelThreshold is not None:
+        if parallel_threshold is not None:
             try:
-                fileSize = os.path.getsize(self.sourceDataPath)
+                file_size = os.path.getsize(self._source_data_path)
             except OSError:
-                fileSize = 0
+                file_size = 0
                 # check if file size in MB is larger than threshold
-            if (fileSize / (2 ** 20)) > parallelThreshold:
+            if (file_size / (2 ** 20)) > parallel_threshold:
                 # if threshold is crossed, don't run preprocessors in parallel
-                maxParallelPreprocessors = 1
+                max_parallel_preprocessors = 1
         try:
-            if parallelThreshold is None and maxParallelPreprocessors == 1:
-                process_log.info('processing %s', self.getName())
-            elif maxParallelPreprocessors == 1:
-                process_log.info('processing %s in 1 thread (threshold reached)', self.getName())
+            if parallel_threshold is None and max_parallel_preprocessors == 1:
+                process_log.info('processing %s', self.name())
+            elif max_parallel_preprocessors == 1:
+                process_log.info('processing %s in 1 thread (threshold reached)', self.name())
             else: # >1
-                process_log.info('processing %s in %d threads', self.getName(), maxParallelPreprocessors)
+                process_log.info('processing %s in %d threads', self.name(), max_parallel_preprocessors)
             start_time = time.time()
-            inputFile = self.sourceDataPath
-            outputFolder = self.tempStoragePath
-            baseINIPath = os.path.join(self.helperPath, "base.ini")
-            preprocessorPath = self.preprocessorPath
+            input_file = self._source_data_path
+            output_folder = self._temp_storage_path
+            base_INI_Path = os.path.join(self._helper_path, "base.ini")
+            preprocessor_path = self._preprocessor_path
 
-            def getTask(modeName, modeProfile, index):
+            def get_task(mode_name, mode_profile, index):
                 """prepare task that runs the preprocessor in temPath separate for every preprocessor instance and move
                 the result to resultPath
                 NOTE: the temporary folder is used to avoid multiple preprocessors mixing their temporary data"""
-                tempOutputFolder = os.path.join(outputFolder, str(index))
-                resultPath = os.path.join(tempOutputFolder, "routing_%s" % modeName)
+                temp_output_folder = os.path.join(output_folder, str(index))
+                result_path = os.path.join(temp_output_folder, "routing_%s" % mode_name)
                 # compile arguments
-                args = ['%s' % preprocessorPath, '-di', '-dro="%s"' % modeName, '-t=%d' % monavThreads, '--verbose',
-                        '--settings="%s"' % baseINIPath,
-                        '--input="%s"' % inputFile, '--output="%s"' % tempOutputFolder, '--name="%s"' % self.name,
-                        '--profile="%s"' % modeProfile, '-dd']
+                args = ['%s' % preprocessor_path, '-di', '-dro="%s"' % mode_name, '-t=%d' % monav_threads, '--verbose',
+                        '--settings="%s"' % base_INI_Path,
+                        '--input="%s"' % input_file, '--output="%s"' % temp_output_folder, '--name="%s"' % self.name,
+                        '--profile="%s"' % mode_profile, '-dd']
 
-                return args, resultPath, self.tempStoragePath
+                return args, result_path, self._temp_storage_path
 
-            def runPreprocessor(queue):
+            def run_preprocessor(queue):
                 """this function is run in an internal pool inside the Monav package"""
 
                 while True:
-                    task = queue.get()
-                    if task == repo.SHUTDOWN_SIGNAL:
+                    current_task = queue.get()
+                    if current_task == repo.SHUTDOWN_SIGNAL:
                         queue.task_done()
                         return
-                    args, fromPath, toPath = task
+                    args, from_path, to_path = current_task
                     # create the independent per-preprocessor path
-                    os.makedirs(fromPath)
+                    os.makedirs(from_path)
 
                     # open /dev/null so that the stdout & stderr output for the command can be dumped into it
-                    fNull = open(os.devnull, "w")
+                    dev_null = open(os.devnull, "w")
                     # call the preprocessor
-                    subprocess.call(reduce(lambda x, y: x + " " + y, args), shell=True, stdout=fNull, stderr=fNull)
+                    subprocess.call(reduce(lambda x, y: x + " " + y, args), shell=True, stdout=dev_null, stderr=dev_null)
                     # move the results to the main folder
-                    shutil.move(fromPath, toPath)
+                    shutil.move(from_path, to_path)
                     # cleanup
-                    fNull.close()
+                    dev_null.close()
                     queue.task_done()
 
             tasks = [
-                getTask("car", "motorcar", 0),
-                getTask("bike", "bicycle", 1),
-                getTask("pedestrian", "foot", 2)
+                get_task("car", "motorcar", 0),
+                get_task("bike", "bicycle", 1),
+                get_task("pedestrian", "foot", 2)
             ]
 
-            preprocQueue = mp.JoinableQueue()
-            for i in range(maxParallelPreprocessors):
-                p = mp.Process(target=runPreprocessor, args=(preprocQueue,))
+            preproc_queue = mp.JoinableQueue()
+            for i in range(max_parallel_preprocessors):
+                p = mp.Process(target=run_preprocessor, args=(preproc_queue,))
                 p.daemon = True
                 p.start()
             for task in tasks:
-                preprocQueue.put(task)
+                preproc_queue.put(task)
                 # wait for the processes to finish
-            preprocQueue.join()
+            preproc_queue.join()
             # shutdown them down
-            for i in range(maxParallelPreprocessors):
-                preprocQueue.put(repo.SHUTDOWN_SIGNAL)
-            preprocQueue.join()
+            for i in range(max_parallel_preprocessors):
+                preproc_queue.put(repo.SHUTDOWN_SIGNAL)
+            preproc_queue.join()
             # run preprocessors in parallel (depending on current settings)
             #      pool = mp.Pool(processes=maxParallelPreprocessors)
             #      pool.map(runPreprocessor, tasks)
@@ -400,23 +401,21 @@ class MonavPackage(Package):
             # just to be sure
             #      pool.join()
             td = int(time.time() - start_time)
-            process_log.info('processed %s in %s', self.getName(), utils.prettyTimeDiff(td))
+            process_log.info('processed %s in %s', self.name(), utils.prettyTimeDiff(td))
             return True
-        except Exception, e:
+        except Exception:
             message = 'monav package: Monav routing data processing failed\n'
             message += 'name: %s' % self.name
             process_log.exception(message)
-            #print(e)
-            #traceback.print_exc(file=sys.stdout)
             return False
 
     def package(self):
         """compress the Monav routing data"""
         modes = ["car", "bike", "pedestrian"]
-        package_log.info('packaging %s', self.getName())
+        package_log.info('packaging %s', self.name())
         for mode in modes:
-            path = os.path.join(self.tempStoragePath, "routing_%s" % mode)
-            archivePath = os.path.join(self.tempStoragePath, "%s_%s.tar.gz" % (self.name, mode))
+            path = os.path.join(self._temp_storage_path, "routing_%s" % mode)
+            archive_path = os.path.join(self._temp_storage_path, "%s_%s.tar.gz" % (self.name, mode))
             try:
                 # fakeRoot -> we need to have this structure inside the archive:
                 # /country/routing_x/
@@ -424,41 +423,37 @@ class MonavPackage(Package):
                 # we supply a prefix, that is subtracted from the path using os.path.relpath()
                 # Example:
                 # temp/monav/0/azores/routing_car - temp/monav/0 = /azores/routing_car
-                utils.tarDir(path, archivePath, fakeRoot=self.tempPath)
+                utils.tarDir(path, archive_path, fakeRoot=self._temp_path)
                 #TODO: MD5 hash for archives
-                self.results.append(archivePath)
-            except Exception, e:
+                self.results.append(archive_path)
+            except Exception:
                 message = 'monav package: compression failed\n'
                 message += 'path: %s' % path
-                message += 'archive: %s' % archivePath
+                message += 'archive: %s' % archive_path
                 package_log.exception(message)
-                #print(e)
-                #traceback.print_exc(file=sys.stdout)
         if self.results:
             return True
         else:
             return False
 
-    def publish(self, mainRepoPath, cleanup=True):
+    def publish(self, main_repo_path, cleanup=True):
         """publish the package to the online repository"""
 
         for path2file in self.results:
-            finalRepoPath = os.path.join(mainRepoPath, self.repoSubPath)
+            finalRepoPath = os.path.join(main_repo_path, self._repo_sub_path)
             try:
                 # try to make sure the folder exists
                 utils.createFolderPath(finalRepoPath)
                 # move the results
                 shutil.move(path2file, finalRepoPath)
-            except Exception, e:
+            except Exception:
                 message = 'monav package: publishing failed\n'
                 message += 'file: %s' % path2file
                 message += 'target path: %s' % finalRepoPath
                 publish_log.exception(message)
-                #print(e)
         if cleanup: # clean up any source & temporary files
-            self.clearAll()
+            self.clear_all()
 
-    def clearAll(self):
+    def clear_all(self):
         """remove the whole temporary directory for this pack"""
-        shutil.rmtree(self.tempPath)
-
+        shutil.rmtree(self.temp_path)
