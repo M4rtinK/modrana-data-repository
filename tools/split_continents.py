@@ -172,6 +172,10 @@ for continent in continents:
         print("running Osmosis")
         try:
             rc = subprocess.call(osmosis_args)
+            # if on of the runs failed, skip the rest and return non-zero return code
+            if rc > 0:
+                print("osmosis run returned non-zero returns code, aborting")
+                break
         except Exception:
             print("running osmosis failed:")
             traceback.print_exc(file=sys.stdout)
