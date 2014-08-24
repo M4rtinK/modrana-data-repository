@@ -7,9 +7,10 @@
 
 import os
 import time
-import datetime
+import traceback
 import subprocess
 import argparse
+import sys
 
 import utils
 
@@ -69,6 +70,9 @@ print("path to Osmosis binary: %s" % OSMOSIS)
 # process all continents in sequence
 # TODO: optionally do all continents at once ?
 
+#return code
+rc = 1
+
 continents = map(lambda x: os.path.join(POLY_DIR, x), os.listdir(POLY_DIR))
 # leave only folders (they contain regional polygons)
 continents = [c for c in continents if os.path.isdir(c)]
@@ -104,7 +108,7 @@ for continent in continents:
     continent_pbf = os.path.join(CONTINENT_PBF_DIR, "%s.osm.pbf" % continent_name)
     continent_pbf = os.path.abspath(continent_pbf)
     if args.verbose:
-        osmosis_args = [OSMOSIS, "-v"]
+        osmosis_args = [OSMOSIS, "-v", "-q", "1"]
     else:
         osmosis_args = [OSMOSIS]
     osmosis_args.extend(["--read-pbf-fast", continent_pbf])
@@ -128,7 +132,6 @@ for continent in continents:
         buffer_size = get_buffer_size(continent_name, poly_count)
         osmosis_args.extend(["--buffer", buffer_size, "--bp", "clipIncompleteEntities=true",
                              "file=%s" % source,
-                             "-q", 1,
                              "--buffer", buffer_size, "--write-pbf", "compress=none",
                              "%s" % destination])
 
@@ -167,8 +170,15 @@ for continent in continents:
         print("not running Osmosis (dry run)")
     else:
         print("running Osmosis")
-        print("return code: %d" % subprocess.call(osmosis_args))
+        print(osmosis_args)
+        try:
+            rc = subprocess.call(osmosis_args)
+        except Exception:
+            print("running osmosis failed:")
+            traceback.print_exc(file=sys.stdout)
+        print("return code: %d" % rc)
 
 dt = time.time() - startTime
 print("splitting finished in %s (%d seconds)" % (utils.prettyTimeDiff(dt), int(dt)))
-print("all done")
+print("continent splitting done")
+exit(rc)
