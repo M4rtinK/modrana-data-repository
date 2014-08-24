@@ -170,7 +170,6 @@ for continent in continents:
         print("not running Osmosis (dry run)")
     else:
         print("running Osmosis")
-        print(osmosis_args)
         try:
             rc = subprocess.call(osmosis_args)
         except Exception:
