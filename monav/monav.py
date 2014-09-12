@@ -19,7 +19,6 @@
 #---------------------------------------------------------------------------
 import shutil
 import subprocess
-import urllib
 import csv
 import os
 import multiprocessing as mp
@@ -235,80 +234,12 @@ class MonavRepository(Repository):
 
 class MonavPackage(Package):
     def __init__(self, metadata):
-        Package.__init__(self)
-        self._url = metadata.get('url')
-        url_type = metadata.get('urlType')
-        self._source_file_path = metadata.get('filePath')
-        self._file_path_prefix = metadata.get('filePathPrefix')
+        Package.__init__(self, metadata)
         self._helper_path = metadata.get('helperPath') # for accessing the base.ini file for Monav preprocessor
         self._preprocessor_path = metadata['preprocessorPath']
-        # split to repoSubPath & filename
-        # -> repoSubPath = continent/country/etc.
-        if self.source_file_path:
-            self._repo_sub_path, self._filename, self._name = utils.pbfPath2repoPathFilenameName(
-                self.source_file_path, self._file_path_prefix
-            )
-            self._source_data_path = self.source_file_path
-        else: # url
-            self._repo_sub_path, self._filename, self._name = utils.url2repoPathFilenameName(self._url, url_type)
-            self._source_data_path = os.path.join(self._temp_storage_path, self._filename)
-        # a temporary working directory for this package only (unique id prefix)
-        self._temp_path = os.path.join(metadata['tempPath'], str(metadata['packId']))
-        # a subdirectory named after the package
-        self._temp_storage_path = os.path.join(self._temp_path, self.name)
 
         # paths to resulting data files
         self.results = []
-
-    def load(self):
-        if self.source_file_path:
-            self._loadFromFile()
-        else:  # url
-            self._download()
-
-    def _loadFromFile(self):
-        """Use local PBF file as data source"""
-        try:
-            if os.path.exists(self._source_data_path):
-                if os.path.exists(self._temp_storage_path):
-                    source_log.info('removing old temporary folder %s', self._temp_storage_path)
-                    shutil.rmtree(self._temp_storage_path)
-                utils.createFolderPath(self._temp_storage_path)
-                return True
-        except Exception:
-            message = 'monav package: OSM PBF loading failed\n'
-            message += 'name: %s\n' % self.name
-            message += 'filePath: %s\n' % self.source_file_path
-            message += 'storage path: %s' % self._source_data_path
-            source_log.exception(message)
-            return False
-
-    def _download(self):
-        """download PBF extract from the URL and store it locally"""
-        try:
-            if os.path.exists(self._source_data_path):
-                return
-                # TODO: DEBUG, remove this
-            else:
-                if os.path.exists(self._temp_storage_path):
-                    source_log.info('removing old folder %s' % self._temp_storage_path)
-                    shutil.rmtree(self._temp_storage_path)
-                utils.createFolderPath(self._temp_storage_path)
-                #        f = open(self.sourceDataPath, "w")
-                #        request = urllib2.urlopen(self.url)
-                urllib.urlretrieve(self._url, self._source_data_path)
-                #        f.write(request.read())
-                #        f.close()
-                return True
-        except Exception:
-            message = 'monav package: OSM PBF download failed\n'
-            message += 'name: %s\n' % self.name
-            message += 'URL: %s\n' % self._url
-            message += 'storage path: %s' % self._source_data_path
-            source_log.exception(message)
-            # print(e)
-            # traceback.print_exc(file=sys.stdout)
-            return False
 
     def process(self, threads=(1, 1), parallel_threshold=None):
         """process the PBF extract into Monav routing data"""
