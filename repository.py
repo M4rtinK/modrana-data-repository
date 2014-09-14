@@ -63,7 +63,7 @@ class Manager(object):
         self._conf = ConfigObj(self.config_path)
 
         # initialize logging
-        repo_log.init_logging(self._args.log_folder)
+        repo_log.init_logging(self.log_folder_path)
 
         # for now, update all repositories
         self.updateAll()
@@ -147,6 +147,16 @@ class Manager(object):
     def data_source_type(self):
         """data source type wrapper"""
         return self._wrapVariable(self.args.data_source, "data_source", repo.DEFAULT_DATA_SOURCE)
+
+    @property
+    def source_data_path(self):
+        """source data path wrapper"""
+        return self._wrapVariable(self.args.source_data_folder, "source_data_folder", repo.DEFAULT_SOURCE_FOLDER)
+
+    @property
+    def log_folder_path(self):
+        """source data path wrapper"""
+        return self._wrapVariable(self.args.log_folder, "log_folder", "logs/repo_update_logs_%s" % time.strftime("%Y.%m.%d-%H:%M:%S"))
 
     @property
     @integer

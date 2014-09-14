@@ -64,7 +64,7 @@ class MonavRepository(Repository):
     def _load_data(self):
         # check from where to load data
         if self.manager.args.data_source == repo.DATA_SOURCE_FOLDER:
-            source_folder = self.manager.args.source_data_folder
+            source_folder = self.manager.source_data_path
             self._load_local_source_data(source_folder)
         else:  # download data
             self._download_source_data()
