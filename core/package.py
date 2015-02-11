@@ -56,7 +56,7 @@ class Package(object):
         # current loading progress 0.0 = 0%, 1.0 = 100%
         self._loading_progress = 0.0
         # a path to the source data file
-        self._source_file_path = None
+        self._source_file_path = metadata.get('filePath')
         # a temporary working directory for this package only
         self._temp_path = None
         # source data
