@@ -65,7 +65,10 @@ class MonavRepository(Repository):
         # check from where to load data
         if self.manager.args.data_source == repo.DATA_SOURCE_FOLDER:
             source_folder = self.manager.source_data_path
-            self._load_local_source_data(source_folder)
+            files = self._load_local_source_data(source_folder)
+            # convert the list of files to Monav packages and start
+            # feeding them to the loading queue
+            self._generate_monav_packages(source_folder, files)
         else:  # download data
             self._download_source_data()
 
