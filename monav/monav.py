@@ -111,7 +111,7 @@ class MonavRepository(Repository):
                 pack_id += 1
                 size_string = utils.bytes2PrettyUnitString(f_size)
                 file_count = len(file_size_list)
-                source_log.info('loading %d/%d: %s (%s)', pack_id, file_count, pack.name(), size_string)
+                source_log.info('loading %d/%d: %s (%s)', pack_id, file_count, pack.name, size_string)
                 pack.load()
                 self.source_queue.put(pack)
             except Exception:
@@ -165,7 +165,7 @@ class MonavRepository(Repository):
                     size_string = "unknown size"
                 else:
                     size_string = utils.bytes2PrettyUnitString(size)
-                source_log.info('downloading %d/%d: %s (%s)', pack_id, urlCount, pack.name(), size_string)
+                source_log.info('downloading %d/%d: %s (%s)', pack_id, urlCount, pack.name, size_string)
                 pack.load()
                 self.source_queue.put(pack)
             except Exception:
@@ -259,11 +259,11 @@ class MonavPackage(Package):
                 max_parallel_preprocessors = 1
         try:
             if parallel_threshold is None and max_parallel_preprocessors == 1:
-                process_log.info('processing %s', self.name())
+                process_log.info('processing %s', self.name)
             elif max_parallel_preprocessors == 1:
-                process_log.info('processing %s in 1 thread (threshold reached)', self.name())
+                process_log.info('processing %s in 1 thread (threshold reached)', self.name)
             else: # >1
-                process_log.info('processing %s in %d threads', self.name(), max_parallel_preprocessors)
+                process_log.info('processing %s in %d threads', self.name, max_parallel_preprocessors)
             start_time = time.time()
             input_file = self._source_data_path
             output_folder = self._temp_storage_path
@@ -335,7 +335,7 @@ class MonavPackage(Package):
             # just to be sure
             #      pool.join()
             td = int(time.time() - start_time)
-            process_log.info('processed %s in %s', self.name(), utils.prettyTimeDiff(td))
+            process_log.info('processed %s in %s', self.name, utils.prettyTimeDiff(td))
             return True
         except Exception:
             message = 'monav package: Monav routing data processing failed\n'
@@ -346,7 +346,7 @@ class MonavPackage(Package):
     def package(self):
         """compress the Monav routing data"""
         modes = ["car", "bike", "pedestrian"]
-        package_log.info('packaging %s', self.name())
+        package_log.info('packaging %s', self.name)
         for mode in modes:
             path = os.path.join(self._temp_storage_path, "routing_%s" % mode)
             archive_path = os.path.join(self._temp_storage_path, "%s_%s.tar.gz" % (self.name, mode))
