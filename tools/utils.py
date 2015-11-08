@@ -26,6 +26,7 @@ import urllib2
 import urlparse
 import zipfile
 import datetime
+import hashlib
 
 # URL types
 import sys
