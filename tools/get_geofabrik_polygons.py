@@ -48,6 +48,7 @@ seen_PBFs = set() # track already seen PBFs
 def parse_page(url, download_folder):
     """return all URLs from a given URL"""
     if url not in visited:
+        print("processing: %s" % url)
         links = []
         status, response = http.request(url)
         for link in BeautifulSoup(response, parseOnlyThese=SoupStrainer('a')):
